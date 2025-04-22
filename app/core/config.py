@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     # 基础配置
     PROJECT_NAME: str = "FastAPI Template"
     API_V1_STR: str = "/api/v1"
+    API_PORT: int = 8001
 
     # 数据库配置
     MYSQL_USER: str

@@ -13,7 +13,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8001,
+        port=settings.API_PORT,
         reload=settings.ENV == "development",  # 开发环境启用热重载
         workers=1 if settings.ENV == "development" else 4,  # 生产环境多进程
         env_file=".env"  # 使用环境变量文件

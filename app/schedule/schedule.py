@@ -48,7 +48,7 @@ def setup_scheduler(app: FastAPI = None):
     
     # 使用文件锁确保只有一个进程运行调度器
     lock_file_path = os.path.join(tempfile.gettempdir(), "tip_scheduler.lock")
-    
+    logger.info(f"Lock file path: {lock_file_path}")
     try:
         # 检查锁文件是否存在
         if os.path.exists(lock_file_path):
@@ -127,6 +127,8 @@ def shutdown_scheduler():
     关闭调度器
     """
     global scheduler
+    logger.info("Shutting down scheduler")
+    logger.info(scheduler)
     
     try:
         if scheduler:

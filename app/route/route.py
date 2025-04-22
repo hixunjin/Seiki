@@ -14,12 +14,15 @@ from fastapi.exceptions import RequestValidationError
 from app.exceptions.http_exceptions import APIException
 from app.schemas.response import ApiResponse
 from contextlib import asynccontextmanager
-from app.core.log_config import setup_logging, shutdown_logging
+from app.core.log_config import setup_logging, shutdown_logging, is_master_process
 from app.services.common.redis import redis_client
 from app.services.common.thread_pool import thread_pool_service
 from app.db.base import close_db_engine
 from app.schedule.schedule import setup_scheduler, shutdown_scheduler
 import logging
+from app.common.log_consumer import consume_logs_forever
+import threading
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -35,18 +38,35 @@ async def lifespan(application: FastAPI):
     setup_logging()
     logger.info("Application starting up")
     
-    # 初始化定时任务调度器
-    setup_scheduler(application)
-    logger.info("Task scheduler initialized")
+    # 初始化定时任务调度器（仅主进程启动）
+    if is_master_process():
+        setup_scheduler(application)
+        logger.info("任务调度器已初始化（主进程）")
+    else:
+        logger.debug("当前为工作进程，跳过任务调度器初始化")
+
+    # 日志消费线程（仅主进程启动，防止多进程重复）
+    if is_master_process():
+        try:
+            # Create a wrapper function to run async function in a thread
+            def run_log_consumer():
+                asyncio.run(consume_logs_forever())
+                
+            log_thread = threading.Thread(target=run_log_consumer, daemon=True)
+            log_thread.start()
+            logger.info("[LogConsumer] 日志消费线程已启动（主进程）")
+        except Exception as e:
+            logger.warning(f"[LogConsumer] 启动日志消费线程失败: {e}")
 
     yield  # 应用运行期间
 
     # 关闭时执行
-    shutdown_scheduler()  # 关闭定时任务调度器
+    if is_master_process():
+        shutdown_logging()  # 关闭日志
+        shutdown_scheduler()  # 关闭定时任务调度器
     await close_db_engine()  # 清理数据库引擎
     await redis_client.close()  # 关闭Redis连接
     thread_pool_service.shutdown()  # 关闭邮件线程池
-    shutdown_logging()
     logger.info("Application shutting down")
 
 

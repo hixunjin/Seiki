@@ -37,6 +37,16 @@ class RedisClient:
         """检查是否在冷却中"""
         return bool(await self.redis.exists(key))
 
+    def pipeline(self, *args, **kwargs):
+        """
+        兼容原生redis-py的pipeline用法，直接转发到底层redis实例。
+        注意：如果底层用的是redis.asyncio.Redis，返回的是异步pipeline。
+        """
+        return self.redis.pipeline(*args, **kwargs)
+
+    async def brpop(self, key, timeout=1):
+        return await self.redis.brpop(key, timeout=timeout)
+
     async def close(self):
         """关闭Redis连接"""
         await self.redis.close()

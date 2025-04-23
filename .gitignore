@@ -29,6 +29,7 @@ build
 logs
 resources
 poetry.lock
+celerybeat-schedule.db
 
 # vim temporary files
 *~

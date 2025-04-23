@@ -8,6 +8,8 @@ import logging.handlers
 from logging.config import dictConfig
 from app.services.common.redis import redis_client
 import sys
+import threading
+import time
 
 # 日志目录
 # 修复路径计算，确保始终指向项目根目录
@@ -95,19 +97,64 @@ class RedisLogHandler(logging.Handler):
                 'lineno': getattr(record, 'lineno', 0)
             }
             
-            # 序列化日志并存储到文件，避免尝试异步操作
+            # 序列化日志
             try:
                 serialized_log = json.dumps(log_entry)
-                # 简化处理方式，直接写入文件
-                with open(os.path.join(LOG_DIR, "redis_pending_logs.txt"), "a") as f:
-                    f.write(serialized_log + "\n")
+                
+                # 将日志添加到处理队列，避免阻塞或异步调用问题
+                log_processor.add_log(serialized_log)
             except Exception as e:
                 # 记录到标准错误输出，避免递归日志
-                import sys
                 print(f"Redis日志处理器错误: {e}", file=sys.stderr)
         except Exception:
             self.handleError(record)
+
+# 创建一个队列处理线程，稍后使用
+class LogQueueProcessor(threading.Thread):
+    def __init__(self, redis_key='app:logs', daemon=True):
+        super().__init__(daemon=daemon)
+        self.redis_key = redis_key
+        self.queue = []
+        self.lock = threading.Lock()
+        self.running = True
+        
+    def add_log(self, log_data):
+        with self.lock:
+            self.queue.append(log_data)
             
+    def run(self):
+        while self.running:
+            # 处理队列中的日志
+            logs_to_process = []
+            with self.lock:
+                if self.queue:
+                    logs_to_process = self.queue.copy()
+                    self.queue.clear()
+            
+            # 如果有日志要处理
+            if logs_to_process:
+                for log_data in logs_to_process:
+                    try:
+                        # 使用同步方式发送到Redis
+                        redis_conn = redis_client.redis._connection_pool.get_connection("LPUSH")
+                        redis_conn.send_command("LPUSH", self.redis_key, log_data)
+                        redis_client.redis._connection_pool.release(redis_conn)
+                    except Exception as e:
+                        # 记录失败日志到备份文件
+                        with open(os.path.join(LOG_DIR, "redis_failed_logs.txt"), "a") as f:
+                            f.write(log_data + "\n")
+            
+            # 休眠一小段时间
+            time.sleep(0.1)
+    
+    def stop(self):
+        self.running = False
+        self.join(timeout=2)  # 等待最多2秒让线程完成
+
+# 创建并启动日志处理线程
+log_processor = LogQueueProcessor()
+log_processor.start()
+
 # 为了保持代码结构兼容性，保留CustomQueueHandler类
 class CustomQueueHandler(QueueHandler):
     def __init__(self, queue):
@@ -225,6 +272,9 @@ def setup_logging():
 
 def shutdown_logging():
     """关闭日志处理器，在多进程环境不需要特殊关闭"""
+    # 停止日志处理线程
+    log_processor.stop()
+    
     # 只在主进程中输出关闭日志
     if is_master_process():
         logging.getLogger("app.core.log_config").info("正在关闭日志系统（主进程）")

@@ -37,13 +37,6 @@ async def lifespan(application: FastAPI):
     # 启动时执行
     setup_logging()
     logger.info("Application starting up")
-    
-    # 初始化定时任务调度器（仅主进程启动）
-    if is_master_process():
-        setup_scheduler(application)
-        logger.info("任务调度器已初始化（主进程）")
-    else:
-        logger.debug("当前为工作进程，跳过任务调度器初始化")
 
     # 日志消费线程（仅主进程启动，防止多进程重复）
     if is_master_process():
@@ -58,12 +51,20 @@ async def lifespan(application: FastAPI):
         except Exception as e:
             logger.warning(f"[LogConsumer] 启动日志消费线程失败: {e}")
 
+    # 单进程运行定时任务是打开下面的代码，多进程运行定时任务是关闭下面的代码使用celery_worker来运行
+    # 初始化定时任务调度器（仅主进程启动）
+    # if is_master_process():
+    #     setup_scheduler(application)
+    #     logger.info("任务调度器已初始化（主进程）")
+    # else:
+    #     logger.debug("当前为工作进程，跳过任务调度器初始化")
+
     yield  # 应用运行期间
 
     # 关闭时执行
     if is_master_process():
         shutdown_logging()  # 关闭日志
-        shutdown_scheduler()  # 关闭定时任务调度器
+        # shutdown_scheduler()  # 关闭定时任务调度器
     await close_db_engine()  # 清理数据库引擎
     await redis_client.close()  # 关闭Redis连接
     thread_pool_service.shutdown()  # 关闭邮件线程池

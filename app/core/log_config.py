@@ -155,11 +155,6 @@ class LogQueueProcessor(threading.Thread):
 log_processor = LogQueueProcessor()
 log_processor.start()
 
-# 为了保持代码结构兼容性，保留CustomQueueHandler类
-class CustomQueueHandler(QueueHandler):
-    def __init__(self, queue):
-        super().__init__(queue)
-
 # 创建一个多进程安全的文件处理器
 class SafeTimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
     """多进程安全的日志文件处理器"""

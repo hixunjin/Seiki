@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     REDIS_PORT: int
     REDIS_PASSWORD: str
 
+    # Celery配置
+    CELERY_BROKER_URL: str = None  # Will be set in __init__
+    CELERY_RESULT_BACKEND: str = None  # Will be set in __init__
+
     # HTTP代理配置 - 仅在测试环境使用
     USE_HTTP_PROXY: bool = False  # 默认不使用代理
     HTTP_PROXY: str = "http://127.0.0.1:7890"
@@ -52,5 +56,10 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"  # 可选，指定编码
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Now set Celery URLs after all attributes are loaded from env
+        self.CELERY_BROKER_URL = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/0"
+        self.CELERY_RESULT_BACKEND = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/0"
 
 settings = Settings()

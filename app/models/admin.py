@@ -20,8 +20,6 @@ class Admin(BaseModel):
     last_name = Column(String(100), nullable=True)
     password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
-    
-    proposal_comments = relationship("ProposalComment", back_populates="admin")
 
     @staticmethod
     def get_password_hash(password: str) -> str:

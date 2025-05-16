@@ -31,10 +31,20 @@ class Settings(BaseSettings):
     HTTP_PROXY: str = "http://127.0.0.1:7890"
     HTTPS_PROXY: str = "http://127.0.0.1:7890"
 
-    # Email配置(Brevo)
+    # Email配置
+    MAIL_MAILER: str
+    MAIL_HOST: str
+    MAIL_PORT: int
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM_ADDRESS: str
+    MAIL_FROM_NAME: str
+    MAIL_ENCRYPTION: str
+
+    # Brevo配置
     BREVO_API_KEY: str
-    EMAIL_FROM: str
-    EMAIL_FROM_NAME: str
+    BREVO_EMAIL_FROM: str
+    BREVO_EMAIL_FROM_NAME: str
 
     # 管理员邮箱
     ADMIN_EMAIL: str = "dev@zetos.fr"

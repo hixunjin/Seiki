@@ -1,0 +1,14 @@
+# 开发环境专用配置
+# 使用方式: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+services:
+  app:
+    ports:
+      - "8001:8001"
+    environment:
+      - ENV=development
+      
+  # 在开发环境中禁用Nginx服务
+  nginx:
+    profiles:
+      - donotstart

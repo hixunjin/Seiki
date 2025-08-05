@@ -42,9 +42,9 @@ class Settings(BaseSettings):
     MAIL_ENCRYPTION: str
 
     # Brevo配置
-    BREVO_API_KEY: str
-    BREVO_EMAIL_FROM: str
-    BREVO_EMAIL_FROM_NAME: str
+    BREVO_API_KEY: str = None
+    BREVO_EMAIL_FROM: str = None
+    BREVO_EMAIL_FROM_NAME: str = None
 
     # 管理员邮箱
     ADMIN_EMAIL: str = "dev@zetos.fr"

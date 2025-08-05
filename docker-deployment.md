@@ -78,7 +78,7 @@ docker-compose up -d app nginx redis
 docker-compose down
 
 # 停止并删除数据卷
-docker-compose down -v
+docker-compose down -ve
 
 # 查看资源使用情况
 docker-compose top

@@ -15,7 +15,7 @@ sys.path.append(BASE_DIR)
 
 # 导入项目配置
 from app.core.config import settings
-from app.db.base import Base
+from app.db.models import Base
 
 
 def import_all_models():
@@ -38,8 +38,8 @@ config = context.config
 # 使用项目的数据库 URL 覆盖 alembic.ini 中的配置
 config.set_main_option(
     "sqlalchemy.url",
-    f"mysql+pymysql://{settings.MYSQL_USER}:{settings.MYSQL_PASSWORD}"
-    f"@{settings.MYSQL_HOST}:{settings.MYSQL_PORT}/{settings.MYSQL_DB}"
+    f"postgresql+psycopg2://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
+    f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 )
 
 # Interpret the config file for Python logging

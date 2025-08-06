@@ -11,14 +11,8 @@ class BaseSchema(BaseModel):
 
 class BaseResponseSchema(BaseSchema):
     id: int
-    created_at: int = Field(default=0)
-    updated_at: int = Field(default=0)
-    
-    @field_validator('created_at', 'updated_at', mode='before')
-    @classmethod
-    def convert_datetime_to_timestamp(cls, v):
-        """将datetime转换为时间戳整数"""
-        return to_timestamp(v)
+    created_at: datetime = Field(default=0)
+    updated_at: datetime = Field(default=0)
 
     def set_padded_id(self, pad_length: int = 4):
         """设置当前对象的padded_id"""

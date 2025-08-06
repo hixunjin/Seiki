@@ -1,4 +1,4 @@
-from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, DateTime, ForeignKey, Table, JSON, DECIMAL
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Table, JSON, DECIMAL, TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
@@ -19,7 +19,7 @@ class User(BaseModel):
     gender = Column(String(50), nullable=True)
     is_active = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
-    last_active_at = Column(TIMESTAMP, nullable=True, default=func.now())
+    last_active_at = Column(TIMESTAMP(timezone=True), nullable=True, default=func.now())
 
     @staticmethod
     def get_password_hash(password: str) -> str:

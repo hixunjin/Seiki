@@ -1,10 +1,11 @@
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
-from .base import AsyncSessionLocal
+from .base import get_session_local
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    AsyncSessionLocal = get_session_local()
     async with AsyncSessionLocal() as session:
         yield session
 
@@ -23,6 +24,7 @@ async def transaction(db: AsyncSession):
 @asynccontextmanager
 async def async_session():
     """创建一个异步会话上下文管理器，用于调度任务"""
+    AsyncSessionLocal = get_session_local()
     async with AsyncSessionLocal() as session:
         try:
             yield session

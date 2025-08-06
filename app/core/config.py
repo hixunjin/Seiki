@@ -11,11 +11,11 @@ class Settings(BaseSettings):
     API_PORT: int = 8001
 
     # 数据库配置
-    MYSQL_USER: str
-    MYSQL_PASSWORD: str
-    MYSQL_HOST: str
-    MYSQL_PORT: str
-    MYSQL_DB: str
+    POSTGRES_USER: str = "demo"
+    POSTGRES_PASSWORD: str = "demo123"
+    POSTGRES_HOST: str = "100.108.167.94"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_DB: str = "demo"
 
     # Redis配置
     REDIS_HOST: str

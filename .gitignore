@@ -39,3 +39,8 @@ celerybeat-schedule.db
 # macOS
 .DS_Store
 app/nltk_data
+
+# others
+shell/
+docs/
+logs/

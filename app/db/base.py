@@ -1,25 +1,40 @@
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.core.config import settings
+from .models import Base
 
 SQLALCHEMY_DATABASE_URL = (
-    f"mysql+aiomysql://{settings.MYSQL_USER}:{settings.MYSQL_PASSWORD}"
-    f"@{settings.MYSQL_HOST}:{settings.MYSQL_PORT}/{settings.MYSQL_DB}"
+    f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
+    f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 )
 
-engine = create_async_engine(
-    SQLALCHEMY_DATABASE_URL,
-    echo=True,
-    future=True,
-    pool_pre_ping=True,
-    # 增强连接池配置以提高稳定性
-    pool_recycle=1800,  # 30分钟内回收连接
-    pool_timeout=30,    # 获取连接的超时时间
-    max_overflow=10,    # 允许的最大连接溢出数
-    pool_size=20,       # 连接池大小
-    connect_args={"connect_timeout": 10}  # 连接超时时间
-)
+# Lazy engine creation to avoid import issues during Alembic migrations
+engine = None
+AsyncSessionLocal = None
+
+def get_engine():
+    """Get or create the async database engine"""
+    global engine
+    if engine is None:
+        engine = create_async_engine(
+            SQLALCHEMY_DATABASE_URL,
+            echo=True,
+            future=True,
+            pool_pre_ping=True,
+            # 增强连接池配置以提高稳定性
+            pool_recycle=1800,  # 30分钟内回收连接
+            pool_timeout=30,    # 获取连接的超时时间
+            max_overflow=10,    # 允许的最大连接溢出数
+            pool_size=20,       # 连接池大小
+        )
+    return engine
+
+def get_session_local():
+    """Get or create the async session factory"""
+    global AsyncSessionLocal
+    if AsyncSessionLocal is None:
+        AsyncSessionLocal = async_sessionmaker(bind=get_engine(), class_=AsyncSession, expire_on_commit=False)
+    return AsyncSessionLocal
 
 # 为调度任务创建一个独立的引擎和会话工厂
 # 这样每个调度任务都会使用自己的连接池和事件循环
@@ -34,18 +49,13 @@ def create_scheduler_engine():
         pool_timeout=30,
         max_overflow=5,
         pool_size=5,
-        connect_args={"connect_timeout": 10}
     )
 
 def create_scheduler_session_factory(engine):
     """为调度任务创建独立的会话工厂"""
     return async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
-AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
-
-Base = declarative_base()
-
-
 async def close_db_engine():
     """关闭数据库引擎和连接池"""
-    await engine.dispose()
+    if engine is not None:
+        await engine.dispose()

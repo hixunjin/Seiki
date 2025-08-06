@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use underscores for function and variable names (`function_name`, `variable_name`)
 - Use hyphens for routes and enum labels (`route-name`, `enum-label`)
 - Use modern, non-deprecated syntax when writing code
-- Use timestamp type consistently for time fields in database design
+- Use TIMESTAMPTZ type consistently for time fields in database design
 
 ### Design Patterns
 - Obtain service layer instances using dependency injection to improve testability and flexibility
@@ -31,11 +31,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Start development server**: `source venv/bin/activate && python main.py` (runs on port 8001 with hot reload)
 - **Start production server**: Set `ENV=production` in .env, then `source venv/bin/activate && python main.py`
 
-### Database
+### Database (PostgreSQL)
 
+- **Install dependencies first**: `source venv/bin/activate && pip install asyncpg psycopg2-binary`
 - **Run migrations**: `source venv/bin/activate && alembic upgrade head`
 - **Create new migration**: `source venv/bin/activate && alembic revision --autogenerate -m "migration_name"`
 - **Downgrade migration**: `source venv/bin/activate && alembic downgrade -1`
+
+#### Database Architecture Notes
+
+- **Async Driver**: Uses `asyncpg` for high-performance async PostgreSQL connections
+- **Migration Driver**: Uses `psycopg2` for Alembic migrations (sync operations)
+- **Lazy Loading**: Engine and session creation deferred to avoid import issues during migrations
+- **Connection Pooling**: Optimized pool settings for production use (20 connections, 30min recycle)
 
 ### Background Tasks
 
@@ -57,16 +65,17 @@ The API follows a dual-client architecture pattern:
 #### Application Layer (`app/`)
 
 - **`route/route.py`**: Main FastAPI app factory with middleware, CORS, and global exception handlers
-- **`core/config.py`**: Environment-based configuration using Pydantic Settings (MySQL, Redis, Celery, JWT, AWS S3, Email)
+- **`core/config.py`**: Environment-based configuration using Pydantic Settings (PostgreSQL, Redis, Celery, JWT, AWS S3, Email)
 - **`core/celery_app.py`**: Celery configuration for background tasks with Redis broker
 
 #### Data Layer
 
 - **`db/`**: SQLAlchemy async setup with session management and transaction contexts
-  - `base.py`: Database connection setup
+  - `base.py`: PostgreSQL connection setup with lazy engine creation
+  - `models.py`: Base declarative model for all database models  
   - `session.py`: General transaction management and asynchronous sessions
 - **`models/`**: SQLAlchemy ORM models inheriting from BaseModel (includes id, created_at, updated_at)
-- **`migrations/`**: Alembic database migrations
+- **`migrations/`**: Alembic database migrations configured for PostgreSQL
 
 #### Business Logic
 
@@ -130,7 +139,9 @@ async def process_data(self, db: AsyncSession):
 ### Key Dependencies
 
 - **FastAPI**: Web framework with OpenAPI documentation
-- **SQLAlchemy**: Async ORM with MySQL backend
+- **SQLAlchemy**: Async ORM with PostgreSQL backend
+- **asyncpg**: High-performance async PostgreSQL driver for application operations
+- **psycopg2-binary**: PostgreSQL adapter for Alembic migrations (sync operations)
 - **Alembic**: Database migrations
 - **Celery**: Background task processing with Redis broker
 - **Pydantic**: Data validation and settings management
@@ -142,7 +153,7 @@ async def process_data(self, db: AsyncSession):
 
 Environment variables needed in `.env`:
 
-- Database: `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DB`
+- Database: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`
 - Redis: `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
 - JWT: `SECRET_KEY`
 - AWS: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_BUCKET_NAME`
@@ -151,7 +162,7 @@ Environment variables needed in `.env`:
 ### File Organization Rules
 
 - **Temporary scripts**: Place in `shell/` directory (test scripts, analysis scripts, debugging files)
-- **Documentation**: Place in `doc/` directory (API docs, flow summaries, markdown files)
+- **Documentation**: Place in `docs/` directory (API docs, flow summaries, markdown files)
 - **Always check for existing files** before creating new scripts or documentation
 - **Clean up unused files** promptly to maintain directory cleanliness
 - **Use descriptive names** that clearly indicate purpose and scope
@@ -161,3 +172,29 @@ Environment variables needed in `.env`:
 - Structured logging with file rotation in `logs/` directory
 - Redis-based log aggregation with separate consumer thread
 - Master process detection to prevent duplicate background services
+
+## Database Migration Notes
+
+### PostgreSQL Architecture
+
+The application has been migrated from MySQL to PostgreSQL with the following architectural improvements:
+
+#### Dual Driver Architecture
+- **asyncpg**: Used for all application database operations (high-performance async)
+- **psycopg2-binary**: Used exclusively for Alembic migrations (synchronous operations)
+
+#### Lazy Loading Pattern
+- Database engines are created lazily to prevent import issues during migrations
+- Session factories are instantiated on-demand to avoid circular dependencies
+- Alembic can import models without triggering async engine creation
+
+#### Connection Pool Optimization
+- **Production**: 20 connections, 10 max overflow, 30-minute recycle
+- **Scheduler**: Separate engine with 5 connections for background tasks
+- **Connection timeout**: 30 seconds with pre-ping health checks
+
+#### Migration Best Practices
+1. Always install both drivers before running migrations
+2. Use `TIMESTAMPTZ` type for time fields (PostgreSQL best practice)
+3. Test migrations in development before production deployment
+4. Backup database before running migrations on production

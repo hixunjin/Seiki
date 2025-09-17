@@ -112,6 +112,15 @@ The API follows a dual-client architecture pattern:
 - **`schedule/`**: Celery task definitions and job scheduling
 - **`schedule/jobs/`**: Individual scheduled task implementations
 
+#### Script Management
+
+- **`scripts/`**: Important production and utility scripts (committed to repository)
+  - Deployment scripts, database maintenance, backup utilities
+  - Permanent, reusable scripts for operations and development
+- **`shell/`**: Temporary development scripts (excluded from git)
+  - Quick tests, debugging helpers, one-off analysis scripts
+  - Not committed to repository (in `.gitignore`)
+
 ### Response Design
 
 #### Unified Response Format
@@ -183,7 +192,13 @@ Environment variables needed in `.env`:
 
 ### File Organization Rules
 
-- **Temporary scripts**: Place in `shell/` directory (test scripts, analysis scripts, debugging files)
+- **Important scripts**: Place in `scripts/` directory (deployment scripts, maintenance scripts, utility scripts)
+  - These are permanent, reusable scripts that should be committed to the repository
+  - Examples: database backup scripts, deployment automation, data migration utilities
+- **Temporary scripts**: Place in `shell/` directory (test scripts, one-off scripts, debugging files)
+  - These are temporary or experimental scripts that should NOT be committed to git
+  - The `shell/` directory is already in `.gitignore`
+  - Examples: quick test scripts, temporary analysis, debug helpers
 - **Documentation**: Place in `docs/` directory (API docs, flow summaries, markdown files)
 - **Always check for existing files** before creating new scripts or documentation
 - **Clean up unused files** promptly to maintain directory cleanliness

@@ -26,8 +26,8 @@ archive.zip
 .egg-info
 *.egg-info
 build
-logs
-resources
+logs/*
+resources/*
 poetry.lock
 celerybeat-schedule.db
 
@@ -43,4 +43,3 @@ app/nltk_data
 # others
 shell/
 docs/
-logs/

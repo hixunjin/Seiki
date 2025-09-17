@@ -1,74 +1,74 @@
 """
-Client端 Swagger UI 配置文件
-专门用于客户端API文档
+Client-side Swagger UI Configuration File
+Dedicated to client API documentation
 """
 
 from typing import Dict, Any
 from app.core.config import settings
 
-# Client Swagger UI 配置
+# Client Swagger UI Configuration
 CLIENT_SWAGGER_UI_PARAMETERS = {
     "deepLinking": True,
     "displayRequestDuration": True,
-    "docExpansion": "list",  # 展开标签但不展开操作
-    "operationsSorter": "alpha",  # 按字母排序
+    "docExpansion": "list",  # Expand tags but not operations
+    "operationsSorter": "alpha",  # Sort alphabetically
     "filter": True,
     "tryItOutEnabled": True,
 }
 
-# Client OpenAPI 元数据配置
+# Client OpenAPI Metadata Configuration
 CLIENT_OPENAPI_INFO = {
-    "title": f"{settings.PROJECT_NAME} - 客户端API",
+    "title": f"{settings.PROJECT_NAME} - Client API",
     "description": f"""
-# 客户端API服务
+# Client API Service
 
-这是面向客户端应用的公共API接口文档。
+This is the public API interface documentation for client applications.
 
-## 功能模块
+## Functional Modules
 
-### 演示功能 (Demo)
-- 基础演示接口
-- 功能测试接口
+### Demo Functions (Demo)
+- Basic demonstration interfaces
+- Function testing interfaces
 
-### 配置管理 (Config)
-- 客户端配置获取
-- 系统配置查询
+### Configuration Management (Config)
+- Client configuration retrieval
+- System configuration queries
 
-### 云存储服务 (AWS)
-- 文件上传功能
-- S3存储集成
+### Cloud Storage Service (AWS)
+- File upload functionality
+- S3 storage integration
 
-## 技术特性
+## Technical Features
 
-- 🚀 **高性能**: 基于FastAPI异步框架
-- 📊 **数据库**: PostgreSQL + SQLAlchemy ORM
-- 🎯 **缓存**: Redis缓存系统
-- ☁️ **云存储**: AWS S3集成
-- 📝 **文档**: 自动生成的OpenAPI文档
-- ⚡ **异步**: 全异步处理提升性能
+- 🚀 **High Performance**: Based on FastAPI async framework
+- 📊 **Database**: PostgreSQL + SQLAlchemy ORM
+- 🎯 **Cache**: Redis cache system
+- ☁️ **Cloud Storage**: AWS S3 integration
+- 📝 **Documentation**: Auto-generated OpenAPI documentation
+- ⚡ **Async**: Full async processing for improved performance
 
-## 响应格式
+## Response Format
 
-所有API响应都遵循统一的格式：
+All API responses follow a unified format:
 
 ```json
 {{
     "success": true,
-    "message": "操作成功", 
+    "message": "Operation successful",
     "data": {{}},
     "code": 200
 }}
 ```
 
-## 环境信息
+## Environment Information
 
-- **当前环境**: {settings.ENV}
-- **API版本**: v1
-- **文档类型**: 客户端API
+- **Current Environment**: {settings.ENV}
+- **API Version**: v1
+- **Documentation Type**: Client API
     """,
     "version": "1.0.0",
     "contact": {
-        "name": "开发团队",
+        "name": "Development Team",
         "email": settings.ADMIN_EMAIL,
     },
     "license_info": {
@@ -77,29 +77,29 @@ CLIENT_OPENAPI_INFO = {
     },
 }
 
-# Client OpenAPI 标签配置
+# Client OpenAPI Tags Configuration
 CLIENT_OPENAPI_TAGS = [
     {
         "name": "client-demo",
-        "description": "客户端演示接口",
+        "description": "Client demonstration interfaces",
         "externalDocs": {
-            "description": "了解更多",
+            "description": "Learn more",
             "url": "https://fastapi.tiangolo.com/",
         },
     },
     {
         "name": "client-config",
-        "description": "客户端配置接口",
+        "description": "Client configuration interfaces",
         "externalDocs": {
-            "description": "配置说明",
+            "description": "Configuration documentation",
             "url": "https://fastapi.tiangolo.com/tutorial/",
         },
     },
     {
         "name": "client-aws",
-        "description": "客户端云存储接口",
+        "description": "Client cloud storage interfaces",
         "externalDocs": {
-            "description": "AWS S3文档",
+            "description": "AWS S3 documentation",
             "url": "https://docs.aws.amazon.com/s3/",
         },
     },
@@ -107,7 +107,7 @@ CLIENT_OPENAPI_TAGS = [
 
 def get_client_openapi_config() -> Dict[str, Any]:
     """
-    获取客户端OpenAPI配置
+    Get client OpenAPI configuration
     """
     return {
         **CLIENT_OPENAPI_INFO,

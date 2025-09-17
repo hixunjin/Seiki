@@ -1,242 +1,242 @@
 # FastAPI Template
 
-> 基于 FastAPI 的现代化企业级 Web API 模板项目
+> Modern enterprise-grade Web API template project based on FastAPI
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115.12-009688.svg)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776ab.svg)](https://www.python.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791.svg)](https://www.postgresql.org)
 [![Redis](https://img.shields.io/badge/Redis-7+-dc382d.svg)](https://redis.io)
-[![Docker](https://img.shields.io/badge/Docker-支持-2496ed.svg)](https://www.docker.com)
+[![Docker](https://img.shields.io/badge/Docker-Supported-2496ed.svg)](https://www.docker.com)
 
-## 🚀 项目特色
+## 🚀 Key Features
 
-### 核心架构
-- **双客户端架构**: 分离的客户端 API 和后台管理 API
-- **分离式文档**: 独立的 Swagger 文档系统，环境控制访问
-- **异步优先**: 全异步架构，高并发处理能力
-- **企业级设计**: 完整的认证、权限、监控体系
+### Core Architecture
+- **Dual-Client Architecture**: Separated client API and backoffice management API
+- **Separated Documentation**: Independent Swagger documentation system with environment-controlled access
+- **Async-First**: Full async architecture for high concurrency
+- **Enterprise Design**: Complete authentication, authorization, and monitoring system
 
-### 技术栈
-- 🏗️ **Web 框架**: FastAPI 0.115.12 (高性能异步框架)
-- 🗄️ **数据库**: PostgreSQL + SQLAlchemy 2.0 (异步 ORM)
-- 🔄 **缓存**: Redis 7+ (缓存 + 消息队列)
-- ⚡ **后台任务**: Celery 5.5.1 (分布式任务队列)
-- 🔐 **认证**: JWT 认证 + 权限管理
-- ☁️ **云存储**: AWS S3 集成
-- 📧 **邮件服务**: SMTP / Brevo API 支持
-- 🐳 **容器化**: Docker + Docker Compose
+### Technology Stack
+- 🏗️ **Web Framework**: FastAPI 0.115.12 (high-performance async framework)
+- 🗄️ **Database**: PostgreSQL + SQLAlchemy 2.0 (async ORM)
+- 🔄 **Cache**: Redis 7+ (cache + message queue)
+- ⚡ **Background Tasks**: Celery 5.5.1 (distributed task queue)
+- 🔐 **Authentication**: JWT authentication + permission management
+- ☁️ **Cloud Storage**: AWS S3 integration
+- 📧 **Email Service**: SMTP / Brevo API support
+- 🐳 **Containerization**: Docker + Docker Compose
 
-### 开发特性
-- 📊 **智能监控**: 健康检查 + 结构化日志
-- 🧪 **完整测试**: 单元测试 + 集成测试框架
-- 📝 **API 导出**: OpenAPI 3.0 JSON 导出功能
-- 🔧 **开发工具**: 热重载 + 调试支持
-- 📚 **完整文档**: 架构文档 + 开发指南
+### Development Features
+- 📊 **Smart Monitoring**: Health checks + structured logging
+- 🧪 **Complete Testing**: Unit test + integration test framework
+- 📝 **API Export**: OpenAPI 3.0 JSON export functionality
+- 🔧 **Development Tools**: Hot reload + debugging support
+- 📚 **Complete Documentation**: Architecture docs + development guides
 
-## 📋 快速开始
+## 📋 Quick Start
 
-### 环境要求
+### Requirements
 
 - Python 3.12+
 - Docker & Docker Compose
-- PostgreSQL 15+ (可选，可使用 Docker)
-- Redis 7+ (可选，可使用 Docker)
+- PostgreSQL 15+ (optional, can use Docker)
+- Redis 7+ (optional, can use Docker)
 
-### 1. 克隆项目
+### 1. Clone Project
 
 ```bash
 git clone <repository-url>
 cd fastapi-template
 ```
 
-### 2. 环境配置
+### 2. Environment Configuration
 
 ```bash
-# 复制环境配置文件
+# Copy environment configuration file
 cp .env.example .env
 
-# 编辑配置文件
+# Edit configuration file
 vim .env
 ```
 
-**必需的环境变量**:
+**Required Environment Variables**:
 ```env
-# 环境设置
+# Environment setting
 ENV=development
 
-# 数据库配置
+# Database configuration
 POSTGRES_USER=demo
 POSTGRES_PASSWORD=demo123
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=demo
 
-# Redis 配置
+# Redis configuration
 REDIS_HOST=redis
 REDIS_PORT=6379
 REDIS_PASSWORD=
 
-# JWT 密钥
+# JWT secret
 SECRET_KEY=your-secret-key-here
 
-# AWS 配置 (可选)
+# AWS configuration (optional)
 AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
 AWS_REGION=us-east-1
 AWS_BUCKET_NAME=your-bucket
 
-# 邮件配置 (可选)
+# Email configuration (optional)
 ADMIN_EMAIL=admin@example.com
 ```
 
-### 3. Docker 启动 (推荐)
+### 3. Docker Startup (Recommended)
 
 ```bash
-# 启动所有服务
+# Start all services
 docker-compose up -d
 
-# 查看服务状态
+# Check service status
 docker-compose ps
 
-# 查看日志
+# View logs
 docker-compose logs -f fastapi-app
 ```
 
-### 4. 本地开发启动
+### 4. Local Development Startup
 
 ```bash
-# 创建虚拟环境
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 # venv\Scripts\activate     # Windows
 
-# 安装依赖
+# Install dependencies
 pip install -r requirements.txt
 
-# 运行数据库迁移
+# Run database migrations
 alembic upgrade head
 
-# 启动开发服务器
+# Start development server
 python main.py
 ```
 
-### 5. 验证安装
+### 5. Verify Installation
 
-访问以下地址验证安装成功：
+Visit the following addresses to verify successful installation:
 
-- **健康检查**: http://localhost:8001/api/v1/config/health
-- **文档导航**: http://localhost:8001/ (仅开发环境)
+- **Health Check**: http://localhost:8001/api/v1/config/health
+- **Documentation Navigation**: http://localhost:8001/ (development environment only)
 
-## 📖 API 文档
+## 📖 API Documentation
 
-### 文档访问地址
+### Documentation Access URLs
 
-| 文档类型 | 地址 | 描述 |
+| Documentation Type | URL | Description |
 |---------|------|------|
-| 🏠 **根导航** | http://localhost:8001/ | 开发环境文档导航 |
-| 📱 **客户端 Swagger** | http://localhost:8001/client/docs | 客户端 API 交互式文档 |
-| 📱 **客户端 ReDoc** | http://localhost:8001/client/redoc | 客户端 API 阅读文档 |
-| 🔧 **后台 Swagger** | http://localhost:8001/backoffice/docs | 后台管理 API 文档 |
-| 🔧 **后台 ReDoc** | http://localhost:8001/backoffice/redoc | 后台管理 API 阅读文档 |
-| 💾 **API 导出** | http://localhost:8001/api-docs/ | OpenAPI JSON 导出 |
+| 🏠 **Root Navigation** | http://localhost:8001/ | Development environment documentation navigation |
+| 📱 **Client Swagger** | http://localhost:8001/client/docs | Client API interactive documentation |
+| 📱 **Client ReDoc** | http://localhost:8001/client/redoc | Client API reading documentation |
+| 🔧 **Backoffice Swagger** | http://localhost:8001/backoffice/docs | Backoffice management API documentation |
+| 🔧 **Backoffice ReDoc** | http://localhost:8001/backoffice/redoc | Backoffice management API reading documentation |
+| 💾 **API Export** | http://localhost:8001/api-docs/ | OpenAPI JSON export |
 
-### 环境控制
+### Environment Control
 
-- **开发环境** (`ENV=development`): 显示完整文档导航
-- **生产环境** (`ENV=production`): 隐藏文档导航，提高安全性
-- **预览环境** (`ENV=preview`): 与开发环境相同
+- **Development Environment** (`ENV=development`): Shows complete documentation navigation
+- **Production Environment** (`ENV=production`): Hides documentation navigation for enhanced security
+- **Preview Environment** (`ENV=preview`): Same as development environment
 
-### 认证使用
+### Authentication Usage
 
-**客户端 API**: 无需认证，直接测试
+**Client API**: No authentication required, test directly
 
-**后台管理 API**: 需要 JWT 认证
-1. 访问 `/api/v1/backoffice/auth/login` 获取 token
-2. 在 Swagger UI 右上角点击 🔒 **Authorize**
-3. 输入: `Bearer <your-token>`
-4. 完成认证后即可测试所有后台接口
+**Backoffice Management API**: Requires JWT authentication
+1. Access `/api/v1/backoffice/auth/login` to get token
+2. Click 🔒 **Authorize** in the top right corner of Swagger UI
+3. Enter: `Bearer <your-token>`
+4. After completing authentication, you can test all backoffice endpoints
 
-## 🏗️ 项目架构
+## 🏗️ Project Architecture
 
-### 目录结构
+### Directory Structure
 
 ```
 fastapi-template/
-├── app/                          # 主应用目录
-│   ├── api/                      # API 路由层
-│   │   ├── client/v1/            # 客户端 API v1
-│   │   ├── backoffice/v1/        # 后台管理 API v1
-│   │   └── docs_export.py        # API 文档导出
-│   ├── core/                     # 核心系统配置
-│   │   ├── config.py             # 环境配置
-│   │   ├── security.py           # 安全配置
-│   │   └── log_config.py         # 日志配置
-│   ├── configs/                  # 应用配置
-│   │   ├── client_swagger_config.py      # 客户端 Swagger 配置
-│   │   ├── backoffice_swagger_config.py  # 后台 Swagger 配置
-│   │   └── docs_apps.py          # 文档应用配置
-│   ├── route/                    # 路由管理
-│   │   ├── route.py              # 主路由配置
-│   │   └── router_registry.py    # 路由注册中心
-│   ├── models/                   # 数据模型
-│   ├── schemas/                  # Pydantic 模式
-│   ├── services/                 # 业务逻辑层
-│   ├── db/                       # 数据库层
-│   └── utils/                    # 工具函数
-├── docs/                         # 项目文档
-│   ├── architecture/             # 架构文档
-│   ├── development/              # 开发文档
-│   └── api/                      # API 文档
-├── migrations/                   # 数据库迁移
-├── logs/                         # 日志文件
-├── docker-compose.yml            # Docker 编排
-├── requirements.txt              # Python 依赖
-└── main.py                       # 应用入口
+├── app/                          # Main application directory
+│   ├── api/                      # API routing layer
+│   │   ├── client/v1/            # Client API v1
+│   │   ├── backoffice/v1/        # Backoffice management API v1
+│   │   └── docs_export.py        # API documentation export
+│   ├── core/                     # Core system configuration
+│   │   ├── config.py             # Environment configuration
+│   │   ├── security.py           # Security configuration
+│   │   └── log_config.py         # Logging configuration
+│   ├── configs/                  # Application configuration
+│   │   ├── client_swagger_config.py      # Client Swagger configuration
+│   │   ├── backoffice_swagger_config.py  # Backoffice Swagger configuration
+│   │   └── docs_apps.py          # Documentation application configuration
+│   ├── route/                    # Route management
+│   │   ├── route.py              # Main route configuration
+│   │   └── router_registry.py    # Route registration center
+│   ├── models/                   # Data models
+│   ├── schemas/                  # Pydantic schemas
+│   ├── services/                 # Business logic layer
+│   ├── db/                       # Database layer
+│   └── utils/                    # Utility functions
+├── docs/                         # Project documentation
+│   ├── architecture/             # Architecture documentation
+│   ├── development/              # Development documentation
+│   └── api/                      # API documentation
+├── migrations/                   # Database migrations
+├── logs/                         # Log files
+├── docker-compose.yml            # Docker orchestration
+├── requirements.txt              # Python dependencies
+└── main.py                       # Application entry point
 ```
 
-### 架构特点
+### Architecture Features
 
-- **分层架构**: API → Service → Model 清晰分层
-- **依赖注入**: 服务层依赖注入，提高测试性
-- **事务管理**: 业务逻辑层统一事务边界
-- **路由注册**: 中心化路由管理，避免重复配置
-- **环境隔离**: 开发/生产环境配置分离
+- **Layered Architecture**: Clear API → Service → Model layering
+- **Dependency Injection**: Service layer dependency injection for improved testability
+- **Transaction Management**: Unified transaction boundaries in business logic layer
+- **Route Registration**: Centralized route management to avoid duplicate configuration
+- **Environment Isolation**: Development/production environment configuration separation
 
-## 🚀 部署指南
+## 🚀 Deployment Guide
 
-### Docker 部署 (推荐)
+### Docker Deployment (Recommended)
 
 ```bash
-# 生产环境启动
+# Production environment startup
 ENV=production docker-compose up -d
 
-# 扩展服务实例
+# Scale service instances
 docker-compose up -d --scale fastapi-app=3
 
-# 更新部署
+# Update deployment
 docker-compose pull
 docker-compose up -d --force-recreate
 ```
 
-### 传统部署
+### Traditional Deployment
 
 ```bash
-# 1. 安装依赖
+# 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. 设置环境变量
+# 2. Set environment variables
 export ENV=production
 export POSTGRES_HOST=your-db-host
-# ... 其他环境变量
+# ... other environment variables
 
-# 3. 运行迁移
+# 3. Run migrations
 alembic upgrade head
 
-# 4. 启动服务
+# 4. Start service
 gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8001
 ```
 
-### Nginx 配置示例
+### Nginx Configuration Example
 
 ```nginx
 upstream fastapi_backend {
@@ -255,7 +255,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # 生产环境隐藏文档访问 (可选)
+    # Hide documentation access in production (optional)
     location ~ ^/(client|backoffice|api-docs) {
         deny all;
         return 404;
@@ -263,11 +263,11 @@ server {
 }
 ```
 
-## 🔧 开发指南
+## 🔧 Development Guide
 
-### 添加新的 API 接口
+### Adding New API Endpoints
 
-1. **创建路由文件** (`app/api/client/v1/new_module.py`):
+1. **Create Route File** (`app/api/client/v1/new_module.py`):
 ```python
 from fastapi import APIRouter, Depends
 from app.schemas.response import ApiResponse
@@ -279,75 +279,75 @@ async def example_endpoint():
     return ApiResponse.success(data={"message": "Hello World"})
 ```
 
-2. **注册路由** (`app/route/router_registry.py`):
+2. **Register Route** (`app/route/router_registry.py`):
 ```python
 def get_client_routes():
     return [
-        # 现有路由...
+        # Existing routes...
         RouteConfig("app.api.client.v1.new_module", "/new-module", ["new-module"]),
     ]
 ```
 
-3. **更新 Swagger 配置** (`app/configs/client_swagger_config.py`):
+3. **Update Swagger Configuration** (`app/configs/client_swagger_config.py`):
 ```python
 CLIENT_OPENAPI_TAGS = [
-    # 现有标签...
+    # Existing tags...
     {
         "name": "new-module",
-        "description": "新模块接口",
+        "description": "New module endpoints",
         "externalDocs": {
-            "description": "模块文档",
+            "description": "Module documentation",
             "url": "https://example.com/docs",
         },
     },
 ]
 ```
 
-### 数据库操作
+### Database Operations
 
 ```bash
-# 创建新迁移
+# Create new migration
 alembic revision --autogenerate -m "description"
 
-# 应用迁移
+# Apply migrations
 alembic upgrade head
 
-# 回滚迁移
+# Rollback migration
 alembic downgrade -1
 ```
 
-### 后台任务
+### Background Tasks
 
 ```bash
-# 启动 Celery Worker
+# Start Celery Worker
 celery -A app.core.celery_app worker --loglevel=info
 
-# 启动 Celery Beat (定时任务)
+# Start Celery Beat (scheduled tasks)
 celery -A app.core.celery_app beat --loglevel=info
 
-# 监控 Celery (可选)
+# Monitor Celery (optional)
 celery -A app.core.celery_app flower
 ```
 
-## 🧪 测试
+## 🧪 Testing
 
-### 运行测试
+### Running Tests
 
 ```bash
-# 安装测试依赖
+# Install test dependencies
 pip install pytest pytest-asyncio httpx
 
-# 运行所有测试
+# Run all tests
 pytest
 
-# 运行特定测试
+# Run specific tests
 pytest tests/test_api.py
 
-# 生成覆盖率报告
+# Generate coverage report
 pytest --cov=app tests/
 ```
 
-### API 测试示例
+### API Testing Example
 
 ```python
 import pytest
@@ -365,134 +365,134 @@ def test_health_check(client):
     assert response.json()["data"]["status"] == "healthy"
 ```
 
-## 📊 监控和日志
+## 📊 Monitoring and Logging
 
-### 健康检查
+### Health Checks
 
-系统提供多层健康检查：
+System provides multi-level health checks:
 
-- **API 健康**: 基础服务状态
-- **数据库健康**: PostgreSQL 连接状态
-- **Redis 健康**: 缓存服务状态
+- **API Health**: Basic service status
+- **Database Health**: PostgreSQL connection status
+- **Redis Health**: Cache service status
 
-访问: http://localhost:8001/api/v1/config/health
+Access: http://localhost:8001/api/v1/config/health
 
-### 日志系统
+### Logging System
 
-- **结构化日志**: JSON 格式，便于分析
-- **日志轮转**: 按日分割，保留 7 天
-- **异步写入**: Redis 队列，性能优化
-- **分类存储**: 应用日志和 SQL 日志分离
+- **Structured Logging**: JSON format for easy analysis
+- **Log Rotation**: Daily rotation with 7-day retention
+- **Async Writing**: Redis queue for performance optimization
+- **Categorized Storage**: Separate application and SQL logs
 
-日志位置: `logs/` 目录
+Log location: `logs/` directory
 
-### 性能监控
+### Performance Monitoring
 
-- **请求响应时间**: 自动记录 API 响应时间
-- **错误率监控**: 实时错误统计
-- **资源使用**: 数据库连接池状态
+- **Request Response Time**: Automatic API response time recording
+- **Error Rate Monitoring**: Real-time error statistics
+- **Resource Usage**: Database connection pool status
 
-## 🔒 安全特性
+## 🔒 Security Features
 
-### 认证和授权
+### Authentication and Authorization
 
-- **JWT 认证**: 安全的令牌认证机制
-- **Token 刷新**: 自动令牌续期
-- **权限控制**: 基于角色的访问控制
+- **JWT Authentication**: Secure token authentication mechanism
+- **Token Refresh**: Automatic token renewal
+- **Permission Control**: Role-based access control
 
-### 安全配置
+### Security Configuration
 
-- **CORS 控制**: 跨域资源共享配置
-- **数据验证**: Pydantic 严格数据验证
-- **SQL 注入防护**: SQLAlchemy ORM 安全保护
-- **环境隔离**: 敏感信息环境变量管理
+- **CORS Control**: Cross-origin resource sharing configuration
+- **Data Validation**: Pydantic strict data validation
+- **SQL Injection Protection**: SQLAlchemy ORM security protection
+- **Environment Isolation**: Sensitive information environment variable management
 
-### 生产安全
+### Production Security
 
-- **文档隐藏**: 生产环境自动隐藏 API 文档
-- **错误处理**: 统一错误响应格式
-- **日志安全**: 敏感信息过滤
+- **Documentation Hiding**: Production environment automatically hides API documentation
+- **Error Handling**: Unified error response format
+- **Log Security**: Sensitive information filtering
 
-## 🤝 贡献指南
+## 🤝 Contribution Guide
 
-### 开发流程
+### Development Process
 
-1. Fork 项目到个人仓库
-2. 创建功能分支: `git checkout -b feature/new-feature`
-3. 提交代码: `git commit -m 'Add new feature'`
-4. 推送到分支: `git push origin feature/new-feature`
-5. 创建 Pull Request
+1. Fork project to personal repository
+2. Create feature branch: `git checkout -b feature/new-feature`
+3. Commit code: `git commit -m 'Add new feature'`
+4. Push to branch: `git push origin feature/new-feature`
+5. Create Pull Request
 
-### 代码规范
+### Code Standards
 
-- **Python**: 遵循 PEP 8 规范
-- **命名约定**:
-  - 函数和变量: `snake_case`
-  - 路由和枚举: `kebab-case`
-  - 类名: `PascalCase`
-- **类型注解**: 必须添加类型注解
-- **文档字符串**: 公共函数必须有文档说明
+- **Python**: Follow PEP 8 standards
+- **Naming Conventions**:
+  - Functions and variables: `snake_case`
+  - Routes and enums: `kebab-case`
+  - Class names: `PascalCase`
+- **Type Annotations**: Must add type annotations
+- **Docstrings**: Public functions must have documentation
 
-### 提交规范
+### Commit Standards
 
-- `feat`: 新功能
-- `fix`: 错误修复
-- `docs`: 文档更新
-- `style`: 代码格式调整
-- `refactor`: 重构
-- `test`: 测试相关
-- `chore`: 构建或辅助工具的变动
+- `feat`: New features
+- `fix`: Bug fixes
+- `docs`: Documentation updates
+- `style`: Code formatting adjustments
+- `refactor`: Refactoring
+- `test`: Test-related
+- `chore`: Build or auxiliary tool changes
 
-## 📚 文档链接
+## 📚 Documentation Links
 
-### 项目文档
+### Project Documentation
 
-- [项目架构文档](docs/architecture/project-architecture.md)
-- [开发框架指南](docs/development/development-framework.md)
-- [Swagger 使用指南](docs/api/swagger-guide.md)
-- [Claude 开发指引](CLAUDE.md)
+- [Project Architecture Documentation](docs/architecture/project-architecture.md)
+- [Development Framework Guide](docs/development/development-framework.md)
+- [Swagger Usage Guide](docs/api/swagger-guide.md)
+- [Claude Development Guide](CLAUDE.md)
 
-### 相关技术文档
+### Related Technical Documentation
 
-- [FastAPI 官方文档](https://fastapi.tiangolo.com/)
-- [SQLAlchemy 2.0 文档](https://docs.sqlalchemy.org/en/20/)
-- [Celery 文档](https://docs.celeryproject.org/)
-- [Docker 使用指南](https://docs.docker.com/)
-- [PostgreSQL 文档](https://www.postgresql.org/docs/)
+- [FastAPI Official Documentation](https://fastapi.tiangolo.com/)
+- [SQLAlchemy 2.0 Documentation](https://docs.sqlalchemy.org/en/20/)
+- [Celery Documentation](https://docs.celeryproject.org/)
+- [Docker Usage Guide](https://docs.docker.com/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 
-## 📄 许可证
+## 📄 License
 
-本项目基于 [MIT License](https://opensource.org/licenses/MIT) 开源协议。
+This project is based on the [MIT License](https://opensource.org/licenses/MIT) open source license.
 
-## 🚨 常见问题
+## 🚨 Frequently Asked Questions
 
-### Q1: Docker 容器启动失败？
-- 检查端口占用: `lsof -i :8001`
-- 查看容器日志: `docker-compose logs fastapi-app`
-- 确认环境变量配置正确
+### Q1: Docker container startup failure?
+- Check port usage: `lsof -i :8001`
+- View container logs: `docker-compose logs fastapi-app`
+- Confirm environment variables are configured correctly
 
-### Q2: 数据库连接失败？
-- 检查 PostgreSQL 服务状态
-- 验证数据库连接参数
-- 确认网络连通性
+### Q2: Database connection failure?
+- Check PostgreSQL service status
+- Verify database connection parameters
+- Confirm network connectivity
 
-### Q3: Swagger 文档无法访问？
-- 确认服务启动在正确端口 (8001)
-- 检查环境变量 `ENV` 设置
-- 验证 OpenAPI JSON 端点: `/client/openapi.json`
+### Q3: Swagger documentation inaccessible?
+- Confirm service starts on correct port (8001)
+- Check environment variable `ENV` setting
+- Verify OpenAPI JSON endpoint: `/client/openapi.json`
 
-### Q4: Redis 连接错误？
-- 检查 Redis 服务状态
-- 验证 Redis 连接参数
-- 确认防火墙设置
+### Q4: Redis connection error?
+- Check Redis service status
+- Verify Redis connection parameters
+- Confirm firewall settings
 
-### Q5: Celery 任务不执行？
-- 确认 Redis 作为 broker 正常运行
-- 检查 Celery worker 启动状态
-- 查看 Celery 日志输出
+### Q5: Celery tasks not executing?
+- Confirm Redis as broker is running normally
+- Check Celery worker startup status
+- View Celery log output
 
 ---
 
-📧 **联系我们**: 如有问题或建议，请通过 Issues 或邮件联系开发团队。
+📧 **Contact Us**: For questions or suggestions, please contact the development team through Issues or email.
 
-🌟 **Star 支持**: 如果这个项目对您有帮助，请给我们一个 Star！
+🌟 **Star Support**: If this project helps you, please give us a Star!

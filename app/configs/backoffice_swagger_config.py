@@ -1,97 +1,97 @@
 """
-Backoffice端 Swagger UI 配置文件
-专门用于后台管理API文档
+Backoffice Swagger UI Configuration File
+Dedicated to backoffice management API documentation
 """
 
 from typing import Dict, Any
 from app.core.config import settings
 
-# Backoffice Swagger UI 配置
+# Backoffice Swagger UI Configuration
 BACKOFFICE_SWAGGER_UI_PARAMETERS = {
     "deepLinking": True,
     "displayRequestDuration": True,
-    "docExpansion": "list",  # 展开标签但不展开操作
-    "operationsSorter": "alpha",  # 按字母排序
+    "docExpansion": "list",  # Expand tags but not operations
+    "operationsSorter": "alpha",  # Sort alphabetically
     "filter": True,
     "tryItOutEnabled": True,
 }
 
-# Backoffice OpenAPI 元数据配置
+# Backoffice OpenAPI Metadata Configuration
 BACKOFFICE_OPENAPI_INFO = {
-    "title": f"{settings.PROJECT_NAME} - 后台管理API",
+    "title": f"{settings.PROJECT_NAME} - Backoffice Management API",
     "description": f"""
-# 后台管理API服务
+# Backoffice Management API Service
 
-这是面向后台管理系统的内部API接口文档。
+This is the internal API interface documentation for the backoffice management system.
 
-## 功能模块
+## Functional Modules
 
-### 认证管理 (Auth)
-- 管理员登录/登出
-- JWT令牌管理
-- 刷新令牌操作
+### Authentication Management (Auth)
+- Administrator login/logout
+- JWT token management
+- Token refresh operations
 
-### 管理员管理 (Admin)
-- 管理员账户CRUD操作
-- 权限管理
-- 用户信息维护
-- 密码管理功能
+### Administrator Management (Admin)
+- Administrator account CRUD operations
+- Permission management
+- User information maintenance
+- Password management functions
 
-### 云存储管理 (AWS)
-- 文件管理功能
-- S3存储操作
-- 上传权限控制
+### Cloud Storage Management (AWS)
+- File management functionality
+- S3 storage operations
+- Upload permission control
 
-## 认证说明
+## Authentication Instructions
 
-⚠️ **所有后台接口都需要JWT认证**（除了登录接口）
+⚠️ **All backoffice interfaces require JWT authentication** (except login interface)
 
-### 如何使用认证：
-1. 调用 `/login` 接口获取访问令牌
-2. 点击右上角 🔒 **Authorize** 按钮
-3. 在输入框中填入：`Bearer 你的访问令牌`
-4. 点击 **Authorize** 完成认证设置
+### How to use authentication:
+1. Call the `/login` interface to get an access token
+2. Click the 🔒 **Authorize** button in the top right corner
+3. Enter in the input box: `Bearer your-access-token`
+4. Click **Authorize** to complete authentication setup
 
-## 技术特性
+## Technical Features
 
-- 🔒 **安全**: JWT认证 + 权限控制
-- 🚀 **高性能**: 基于FastAPI异步框架
-- 📊 **数据库**: PostgreSQL + SQLAlchemy ORM
-- 🎯 **缓存**: Redis缓存系统
-- ☁️ **云存储**: AWS S3集成
-- 📝 **文档**: 自动生成的OpenAPI文档
-- ⚡ **异步**: 全异步处理提升性能
+- 🔒 **Security**: JWT authentication + permission control
+- 🚀 **High Performance**: Based on FastAPI async framework
+- 📊 **Database**: PostgreSQL + SQLAlchemy ORM
+- 🎯 **Cache**: Redis cache system
+- ☁️ **Cloud Storage**: AWS S3 integration
+- 📝 **Documentation**: Auto-generated OpenAPI documentation
+- ⚡ **Async**: Full async processing for improved performance
 
-## 响应格式
+## Response Format
 
-所有API响应都遵循统一的格式：
+All API responses follow a unified format:
 
 ```json
 {{
     "success": true,
-    "message": "操作成功",
+    "message": "Operation successful",
     "data": {{}},
     "code": 200
 }}
 ```
 
-## 错误码说明
+## Error Code Description
 
-- **400**: 参数错误（显示给用户）
-- **401**: 认证失败
-- **403**: 权限不足
-- **404**: 资源不存在
-- **500**: 服务器错误
+- **400**: Parameter error (displayed to users)
+- **401**: Authentication failed
+- **403**: Insufficient permissions
+- **404**: Resource not found
+- **500**: Server error
 
-## 环境信息
+## Environment Information
 
-- **当前环境**: {settings.ENV}
-- **API版本**: v1
-- **文档类型**: 后台管理API
+- **Current Environment**: {settings.ENV}
+- **API Version**: v1
+- **Documentation Type**: Backoffice Management API
     """,
     "version": "1.0.0",
     "contact": {
-        "name": "开发团队",
+        "name": "Development Team",
         "email": settings.ADMIN_EMAIL,
     },
     "license_info": {
@@ -100,47 +100,47 @@ BACKOFFICE_OPENAPI_INFO = {
     },
 }
 
-# Backoffice OpenAPI 标签配置
+# Backoffice OpenAPI Tags Configuration
 BACKOFFICE_OPENAPI_TAGS = [
     {
         "name": "backoffice-auth",
-        "description": "后台认证接口",
+        "description": "Backoffice authentication interfaces",
         "externalDocs": {
-            "description": "认证文档",
+            "description": "Authentication documentation",
             "url": "https://fastapi.tiangolo.com/tutorial/security/",
         },
     },
     {
         "name": "backoffice-admin",
-        "description": "后台管理员接口",
+        "description": "Backoffice administrator interfaces",
         "externalDocs": {
-            "description": "管理员文档",
+            "description": "Administrator documentation",
             "url": "https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/",
         },
     },
     {
         "name": "backoffice-aws",
-        "description": "后台云存储管理",
+        "description": "Backoffice cloud storage management",
         "externalDocs": {
-            "description": "AWS管理文档",
+            "description": "AWS management documentation",
             "url": "https://docs.aws.amazon.com/s3/",
         },
     },
 ]
 
-# JWT认证配置
+# JWT Authentication Configuration
 BACKOFFICE_SECURITY_SCHEMES = {
     "BearerAuth": {
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "description": "JWT认证令牌，格式：Bearer {token}。请先通过登录接口获取令牌。",
+        "description": "JWT authentication token, format: Bearer {token}. Please obtain the token through the login interface first.",
     }
 }
 
 def get_backoffice_openapi_config() -> Dict[str, Any]:
     """
-    获取后台管理OpenAPI配置
+    Get backoffice management OpenAPI configuration
     """
     return {
         **BACKOFFICE_OPENAPI_INFO,

@@ -60,19 +60,40 @@ The API follows a dual-client architecture pattern:
 - **Client API** (`/api/v1/`): Public-facing endpoints for client applications
 - **Backoffice API** (`/api/v1/backoffice/`): Admin/management endpoints with authentication
 
+### Documentation Access
+
+#### Environment-Controlled Documentation Navigation
+- **Development/Preview**: Root path (`/`) provides complete API documentation navigation
+- **Production**: Root path hidden to prevent API structure disclosure
+- **Direct Access**: All documentation endpoints remain accessible via direct URLs
+
+#### Swagger/OpenAPI Documentation
+- **Client Docs**: `/client/docs` (Swagger UI), `/client/redoc` (ReDoc)
+- **Backoffice Docs**: `/backoffice/docs` (Swagger UI), `/backoffice/redoc` (ReDoc)
+- **JSON Export**: `/api-docs/client.json`, `/api-docs/backoffice.json`
+- **Environment Control**: Controlled by `ENV` environment variable (`development`, `preview`, `production`)
+
 ### Core Components
 
 #### Application Layer (`app/`)
 
 - **`route/route.py`**: Main FastAPI app factory with middleware, CORS, and global exception handlers
+- **`route/router_registry.py`**: Centralized route configuration management to avoid duplication
 - **`core/config.py`**: Environment-based configuration using Pydantic Settings (PostgreSQL, Redis, Celery, JWT, AWS S3, Email)
 - **`core/celery_app.py`**: Celery configuration for background tasks with Redis broker
+
+#### Configuration Layer
+
+- **`configs/`**: Application configuration definitions separated from core system configs
+  - `client_swagger_config.py`: Client API Swagger configuration
+  - `backoffice_swagger_config.py`: Backoffice API Swagger configuration
+  - `docs_apps.py`: Standalone documentation applications
 
 #### Data Layer
 
 - **`db/`**: SQLAlchemy async setup with session management and transaction contexts
   - `base.py`: PostgreSQL connection setup with lazy engine creation
-  - `models.py`: Base declarative model for all database models  
+  - `models.py`: Base declarative model for all database models
   - `session.py`: General transaction management and asynchronous sessions
 - **`models/`**: SQLAlchemy ORM models inheriting from BaseModel (includes id, created_at, updated_at)
 - **`migrations/`**: Alembic database migrations configured for PostgreSQL
@@ -84,6 +105,7 @@ The API follows a dual-client architecture pattern:
   - `response.py`: Unified response format using `ApiResponse`
   - `paginator.py`: Pagination utilities
 - **`api/`**: Route handlers organized by client/backoffice and versioned (v1)
+  - `docs_export.py`: API documentation export functionality
 
 #### Background Processing
 

@@ -1,15 +1,9 @@
 from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-# client
-from app.api.client.v1 import demo as client_demo
-from app.api.client.v1 import config as client_config
-
-# backoffice
-from app.api.backoffice.v1 import auth as backoffice_auth
-from app.api.backoffice.v1 import admin as backoffice_admin
-
+# 路由导入已移动到路由注册中心统一管理
 
 from app.core.config import settings
+from app.configs.docs_apps import create_client_app, create_backoffice_app
 from fastapi.exceptions import RequestValidationError
 from app.exceptions.http_exceptions import APIException
 from app.schemas.response import ApiResponse
@@ -75,7 +69,11 @@ def create_app():
     app = FastAPI(
         lifespan=lifespan,
         title=settings.PROJECT_NAME,
-        openapi_url=f"{settings.API_V1_STR}/openapi.json"
+        description="FastAPI Template - 统一入口",
+        version="1.0.0",
+        docs_url=None,  # 禁用默认文档
+        redoc_url=None,  # 禁用默认ReDoc
+        openapi_url=None,  # 禁用默认OpenAPI
     )
 
     # 配置CORS
@@ -87,36 +85,56 @@ def create_app():
         allow_headers=["*"],
     )
 
-    @app.get("/")
-    async def root():
-        logger.info("Root endpoint called")
-        return {"message": "Welcome to TIP API"}
+    # 开发环境提供文档访问指引，生产环境隐藏
+    if settings.ENV in ["development", "preview"]:
+        @app.get("/", tags=["文档导航"])
+        async def swagger_navigation():
+            """
+            开发环境 Swagger 文档导航
+            """
+            return {
+                "message": "FastAPI Template - 开发环境",
+                "environment": settings.ENV,
+                "documentation": {
+                    "client_api": {
+                        "swagger": "/client/docs",
+                        "redoc": "/client/redoc",
+                        "openapi": "/client/openapi.json",
+                        "description": "客户端API文档（无需认证）"
+                    },
+                    "backoffice_api": {
+                        "swagger": "/backoffice/docs",
+                        "redoc": "/backoffice/redoc",
+                        "openapi": "/backoffice/openapi.json",
+                        "description": "后台管理API文档（需要JWT认证）"
+                    }
+                },
+                "api_exports": {
+                    "client_json": "/api-docs/client.json",
+                    "backoffice_json": "/api-docs/backoffice.json",
+                    "info": "/api-docs/"
+                },
+                "health_check": "/api/v1/config/health"
+            }
 
-    # Client 路由
-    app.include_router(
-        client_demo.router,
-        prefix=f"{settings.API_V1_STR}/demo",
-        tags=["client-demo"]
-    )
+    # 使用路由注册中心统一注册所有路由
+    from app.route.router_registry import register_routes, get_client_routes, get_backoffice_routes, get_common_routes
 
-    app.include_router(
-        client_config.router,
-        prefix=f"{settings.API_V1_STR}/config",
-        tags=["client-config"]
-    )
+    # 注册客户端路由
+    register_routes(app, get_client_routes())
 
-    # Backoffice 路由
-    app.include_router(
-        backoffice_auth.router,
-        prefix=f"{settings.API_V1_STR}/backoffice/auth",
-        tags=["backoffice-auth"]
-    )
+    # 注册后台路由
+    register_routes(app, get_backoffice_routes())
 
-    app.include_router(
-        backoffice_admin.router,
-        prefix=f"{settings.API_V1_STR}/backoffice/admins",
-        tags=["backoffice-admin"]
-    )
+    # 注册公共路由
+    register_routes(app, get_common_routes())
+
+    # 挂载分离的文档应用
+    client_docs_app = create_client_app()
+    backoffice_docs_app = create_backoffice_app()
+    
+    app.mount("/client", client_docs_app)
+    app.mount("/backoffice", backoffice_docs_app)
 
     @app.exception_handler(APIException)
     async def api_exception_handler(request: Request, exc: APIException):

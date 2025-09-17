@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, String, Enum
+from sqlalchemy import Boolean, Column, Integer, String, Enum
 from .base import BaseModel
 from passlib.context import CryptContext
 from sqlalchemy.orm import relationship
@@ -14,6 +14,7 @@ class UserRole(str, Enum):
 class Admin(BaseModel):
     __tablename__ = "admins"
 
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     role = Column(String(20), default=UserRole.ADMIN, nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     first_name = Column(String(100), nullable=True)

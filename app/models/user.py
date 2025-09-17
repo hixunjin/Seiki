@@ -11,6 +11,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class User(BaseModel):
     __tablename__ = "users"
 
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     email = Column(String(255), unique=True, index=True)
     hashed_password = Column(String(255))
     first_name = Column(String(100), nullable=True)

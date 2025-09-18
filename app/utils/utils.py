@@ -51,13 +51,13 @@ class S3Handler:
                 ExtraArgs={'ContentType': content_type}
             )
 
-            # 使用 settings.AWS_ENDPOINT 构建 S3 URL
+            # Build S3 URL using settings.AWS_ENDPOINT
             if settings.AWS_ENDPOINT:
-                # 如果有配置 AWS_ENDPOINT，使用它来构建 URL
+                # If AWS_ENDPOINT is configured, use it to build URL
                 s3_url = f"{settings.AWS_ENDPOINT}/{s3_key}"
             else:
-                # 如果没有配置 AWS_ENDPOINT，使用标准格式构建 URL
-                # 检查是否是中国区域
+                # If AWS_ENDPOINT is not configured, use standard format to build URL
+                # Check if it's China region
                 if settings.AWS_REGION and settings.AWS_REGION.startswith('cn-'):
                     s3_url = f"https://{self.bucket_name}.s3.{settings.AWS_REGION}.amazonaws.com.cn/{s3_key}"
                 else:
@@ -161,7 +161,7 @@ def extract_pdf_text(file_path: str) -> str:
         reader = PdfReader(file_path)
         text_content = []
 
-        # 遍历每一页并提取文本
+        # Iterate through each page and extract text
         for page in reader.pages:
             text_content.append(page.extract_text())
 
@@ -178,16 +178,16 @@ def process_csv_file(file_path: str) -> str:
     处理 CSV 文件并返回格式化的文本内容
     """
     try:
-        # 尝试使用 pandas 读取（可以处理更复杂的 CSV）
+        # Try using pandas to read (can handle more complex CSV)
         try:
             df = pd.read_csv(file_path)
-            # 获取基本统计信息
+            # Get basic statistics
             summary = f"CSV 文件概要:\n"
             summary += f"总行数: {len(df)}\n"
             summary += f"总列数: {len(df.columns)}\n"
             summary += f"列名: {', '.join(df.columns)}\n\n"
 
-            # 添加前几行数据作为预览
+            # Add first few rows as preview
             preview_rows = min(5, len(df))
             summary += f"前 {preview_rows} 行数据预览:\n"
             summary += df.head(preview_rows).to_string()
@@ -195,11 +195,11 @@ def process_csv_file(file_path: str) -> str:
             return summary
 
         except Exception:
-            # 如果 pandas 读取失败，使用 csv 模块作为备选
+            # If pandas reading fails, use csv module as fallback
             with open(file_path, 'r', encoding='utf-8') as f:
                 csv_reader = csv.reader(f)
-                headers = next(csv_reader)  # 获取表头
-                rows = list(csv_reader)[:5]  # 获取前5行数据
+                headers = next(csv_reader)  # Get headers
+                rows = list(csv_reader)[:5]  # Get first 5 rows of data
 
                 content = f"CSV 文件内容:\n"
                 content += f"表头: {', '.join(headers)}\n\n"
@@ -224,16 +224,16 @@ def process_audio_file(file_path: str) -> str:
     import os
 
     try:
-        # 确保文件路径是绝对路径并正确编码
+        # Ensure file path is absolute and properly encoded
         absolute_path = os.path.abspath(os.path.normpath(file_path))
 
-        # 将文件路径转换为原始字符串
+        # Convert file path to raw string
         safe_path = str(absolute_path)
 
-        # 加载Whisper模型
+        # Load Whisper model
         model = whisper.load_model("base")
 
-        # 转录音频
+        # Transcribe audio
         result = model.transcribe(safe_path)
 
         return result["text"]
@@ -264,7 +264,7 @@ def get_temporary_credentials() -> Dict:
     Returns:
         Dict: 包含临时凭证的字典，包括access key, secret key和session token
     """
-    # 如果是中国区域，需要特别指定endpoint_url
+    # If it's China region, need to specify endpoint_url specifically
     region = settings.AWS_REGION
     endpoint_url = None
     if region.startswith('cn-'):
@@ -279,7 +279,7 @@ def get_temporary_credentials() -> Dict:
 
     try:
         response = sts_client.get_session_token(
-            DurationSeconds=3600  # 凭证有效期1小时
+            DurationSeconds=3600  # Credential valid for 1 hour
         )
 
         return {
@@ -295,7 +295,7 @@ def get_temporary_credentials() -> Dict:
         )
 
 
-# HTML 净化函数
+# HTML sanitization function
 def sanitize_html(html_content):
     allowed_tags = ['p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'u', 
                    'ul', 'ol', 'li', 'span', 'a', 'img', 'blockquote', 'code', 'pre',
@@ -315,7 +315,7 @@ def sanitize_html(html_content):
     return cleaned_html
 
 
-# HTTP代理配置工具
+# HTTP proxy configuration tool
 def configure_http_proxy():
     """
     配置HTTP代理，仅在测试环境中启用
@@ -327,19 +327,19 @@ def configure_http_proxy():
     import httpx
     from ..core.config import settings
     
-    # 仅在测试环境中启用代理
+    # Enable proxy only in test environment
     if settings.ENV == "development" and settings.USE_HTTP_PROXY:
-        # 设置环境变量
+        # Set environment variables
         os.environ["HTTP_PROXY"] = settings.HTTP_PROXY
         os.environ["HTTPS_PROXY"] = settings.HTTPS_PROXY
         
-        # 创建配置了代理的httpx客户端
-        # 注意：httpx中代理URL格式应该是完整的URL
+        # Create httpx client configured with proxy
+        # Note: proxy URL format in httpx should be complete URL
         proxy_url = settings.HTTP_PROXY
         proxy_client = httpx.Client(proxy=proxy_url)
         return proxy_client
     else:
-        # 在非开发环境或未启用代理时，明确删除代理环境变量
+        # In non-development environment or when proxy is not enabled, explicitly remove proxy environment variables
         if "HTTP_PROXY" in os.environ:
             del os.environ["HTTP_PROXY"]
         if "HTTPS_PROXY" in os.environ:
@@ -349,7 +349,7 @@ def configure_http_proxy():
         if "https_proxy" in os.environ:
             del os.environ["https_proxy"]
     
-    # 返回一个明确配置了无代理的httpx客户端
+    # Return an httpx client explicitly configured without proxy
     return httpx.Client(timeout=60.0)  
 
 
@@ -394,21 +394,21 @@ def get_timezone_by_city(city_name, country_code=None):
         str: 时区字符串，如 'Asia/Shanghai'
     """
     try:
-        # 初始化地理编码器
+        # Initialize geocoder
         geolocator = Nominatim(user_agent="timezone_app")
         
-        # 构建查询字符串
+        # Build query string
         query = city_name
         if country_code:
             query = f"{city_name}, {country_code}"
             
-        # 获取城市的地理位置
+        # Get geographical location of the city
         location = geolocator.geocode(query)
         
         if location is None:
             return None
             
-        # 使用 TimezoneFinder 查找时区
+        # Use TimezoneFinder to find timezone
         tf = TimezoneFinder()
         timezone_str = tf.timezone_at(lng=location.longitude, lat=location.latitude)
         

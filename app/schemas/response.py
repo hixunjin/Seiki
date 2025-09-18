@@ -13,7 +13,7 @@ T = TypeVar('T')
 
 
 class PaginatedData(BaseModel, Generic[T]):
-    """分页数据结构"""
+    """Paginated data structure"""
     items: List[T]
     total: int
     per_page: int
@@ -23,19 +23,19 @@ class PaginatedData(BaseModel, Generic[T]):
 
 
 class ApiResponse:
-    """API响应处理类"""
+    """API response handler class"""
 
     @staticmethod
     def success(
             data: Any = None,
             message: str = "Success",
-            body_code: int = 200,  # 业务成功码，0 表示成功
+            body_code: int = 200,  # Business success code, 0 indicates success
             http_code: int = status.HTTP_200_OK,
             headers: Dict = None
     ) -> JSONResponse:
-        """成功响应"""
+        """Success response"""
         response_data = {
-            "code": body_code,  # 业务码
+            "code": body_code,  # Business code
             "message": message,
             "data": jsonable_encoder(data) if data is not None else None
         }
@@ -50,7 +50,7 @@ class ApiResponse:
             http_code: int = status.HTTP_204_NO_CONTENT,
             headers: Dict = None
     ) -> Response:
-        """无数据成功响应"""
+        """Success response without data"""
         return Response(status_code=http_code, headers=headers)
 
     @staticmethod
@@ -61,12 +61,12 @@ class ApiResponse:
             data: Any = None,
             headers: Dict = None
     ) -> JSONResponse:
-        """失败响应"""
+        """Failed response"""
         response_data = {
             "code": body_code,
             "message": message
         }
-        if data is not None:  # 仅当 data 非 None 时添加字段
+        if data is not None:  # Only add field when data is not None
             response_data["data"] = jsonable_encoder(data)
         return JSONResponse(
             content=response_data,
@@ -85,32 +85,32 @@ class ApiResponse:
         http_code: int = status.HTTP_200_OK,
         headers: Dict = None
     ) -> JSONResponse:
-        """优化的分页响应方法"""
-        # 输入验证
+        """Optimized pagination response method"""
+        # Input validation
         if page < 1 or per_page < 1:
             raise APIException(status_code=400, message="Invalid page or per_page parameter")
         
-        # 优化总数查询
+        # Optimize total count query
         total_query = select(func.count()).select_from(query.subquery())
         total = await db.scalar(total_query)
         
-        # 计算分页参数
+        # Calculate pagination parameters
         last_page = ceil(total / per_page) if per_page > 0 else 0
         
-        # 验证页码是否超出范围
+        # Validate if page number exceeds range
         if page > last_page and last_page > 0:
             raise APIException(status_code=404, message="Page not found")
         
-        # 执行分页查询
+        # Execute paginated query
         offset_query = query.offset((page - 1) * per_page).limit(per_page)
         result = await db.execute(offset_query)
         items = result.scalars().all()
         
-        # 可选的数据转换
+        # Optional data transformation
         if transform_func is not None:
             items = transform_func(items)
         
-        # 构建分页数据
+        # Build paginated data
         paginated_data = PaginatedData(
             items=items,
             total=total,

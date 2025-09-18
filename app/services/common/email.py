@@ -11,10 +11,10 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from app.core.config import settings
 from app.services.common.thread_pool import thread_pool_service
 
-# 配置日志
+# Configure logging
 logger = logging.getLogger("email_service")
 
-# 配置FastMail连接
+# Configure FastMail connection
 mail_conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
     MAIL_PASSWORD=settings.MAIL_PASSWORD,
@@ -28,15 +28,15 @@ mail_conf = ConnectionConfig(
     VALIDATE_CERTS=True
 )
 
-# 初始化FastMail
+# Initialize FastMail
 fastmail = FastMail(mail_conf)
 
-# 设置模板目录
+# Set template directory
 TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "resources" / "emails"
 if not TEMPLATES_DIR.exists():
     TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
 
-# 初始化Jinja2环境
+# Initialize Jinja2 environment
 jinja_env = Environment(
     loader=FileSystemLoader(str(TEMPLATES_DIR)),
     autoescape=select_autoescape(['html', 'xml']),
@@ -46,7 +46,7 @@ jinja_env = Environment(
 
 
 class EmailService:
-    """邮件服务类，提供邮件发送功能"""
+    """Email service class providing email sending functionality"""
 
     @staticmethod
     def _send_sync(
@@ -57,7 +57,7 @@ class EmailService:
         from_name: Optional[str] = None
     ) -> bool:
         """
-        使用同步方式发送邮件
+        Send email using synchronous method
         """
         if isinstance(to_emails, str):
             to_emails = [to_emails]
@@ -76,19 +76,19 @@ class EmailService:
 
         try:
             with smtplib.SMTP(settings.MAIL_HOST, settings.MAIL_PORT) as server:
-                # 如果需要TLS加密
+                # If TLS encryption is needed
                 if hasattr(settings, "MAIL_ENCRYPTION") and settings.MAIL_ENCRYPTION.lower() == "tls":
                     server.starttls()
-                
-                # 如果需要登录
+
+                # If login is required
                 server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
                 
                 server.sendmail(from_email, to_emails, message.as_string())
                 
-            logger.info(f"成功发送邮件至 {to_emails}")
+            logger.info(f"Email sent successfully to {to_emails}")
             return True
         except Exception as e:
-            logger.error(f"发送邮件时出错: {e}")
+            logger.error(f"Error sending email: {e}")
             raise
 
     @classmethod
@@ -101,30 +101,30 @@ class EmailService:
         from_name: Optional[str] = None
     ) -> bool:
         """
-        异步发送邮件
+        Send email asynchronously
         """
         if isinstance(to_emails, str):
             to_emails = [to_emails]
         
         try:
-            # 确保html_content不为空
+            # Ensure html_content is not empty
             if not html_content or len(html_content.strip()) == 0:
-                logger.error("邮件HTML内容为空，发送失败")
+                logger.error("Email HTML content is empty, sending failed")
                 return False
         
-            # 使用FastMail发送邮件（异步方式）
+            # Send email using FastMail (asynchronous method)
             message = MessageSchema(
                 subject=subject,
                 recipients=to_emails,
-                body=html_content,  # 尝试使用body参数
+                body=html_content,  # Try using body parameter
                 subtype="html"
             )
         
             await fastmail.send_message(message)
-            logger.info(f"成功异步发送邮件至 {to_emails}")
+            logger.info(f"Email sent asynchronously to {to_emails}")
             return True
         except Exception as e:
-            logger.warning(f"FastMail发送失败，尝试使用同步方式: {e}")
+            logger.warning(f"FastMail sending failed, trying synchronous method: {e}")
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(
                 thread_pool_service.get_executor(), 
@@ -142,28 +142,28 @@ class EmailService:
         from_name: Optional[str] = None
     ) -> bool:
         """
-        使用模板发送邮件
-        
+        Send email using template
+
         Parameters:
         -----------
-        to_emails: 收件人列表或单个收件人
-        template_name: 模板名称（如 'auth/verification.html'）
-        template_params: 模板参数
-        subject: 邮件主题
-        from_email: 发件人邮箱，默认使用配置中的值
-        from_name: 发件人名称，默认使用配置中的值
+        to_emails: Recipient list or single recipient
+        template_name: Template name (e.g., 'auth/verification.html')
+        template_params: Template parameters
+        subject: Email subject
+        from_email: Sender email, defaults to configured value
+        from_name: Sender name, defaults to configured value
         """
         try:
-            # 添加默认参数
+            # Add default parameters
             params = {
                 "img_host": settings.AWS_ENDPOINT if hasattr(settings, "AWS_ENDPOINT") else "",
                 **template_params
             }
             
-            # 渲染模板
+            # Render template
             template = jinja_env.get_template(template_name)
             html_content = template.render(**params)
-            # 发送邮件
+            # Send email
             return await cls.send(
                 to_emails=to_emails,
                 subject=subject,
@@ -172,14 +172,14 @@ class EmailService:
                 from_name=from_name
             )
         except Exception as e:
-            logger.error(f"使用模板发送邮件时出错: {e}")
+            logger.error(f"Error sending email with template: {e}")
             raise
 
-    # 专用方法，方便调用
+    # Dedicated methods for convenience
     @classmethod
     async def send_verification_email(cls, email: str, first_name: str, verification_code: str) -> bool:
         """
-        发送账号验证邮件
+        Send account verification email
         """
         return await cls.send_with_template(
             to_emails=email,
@@ -191,5 +191,5 @@ class EmailService:
             subject="Bienvenue chez Moriarty - Activez votre compte"
         )
 
-# 导出实例，方便使用
+# Export instance for convenience
 email_service = EmailService()

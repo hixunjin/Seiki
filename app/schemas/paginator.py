@@ -12,7 +12,7 @@ from sqlalchemy.engine.result import Row
 T = TypeVar('T')
 
 class Paginator(Generic[T]):
-    """Laravel风格的分页器"""
+    """Laravel-style paginator"""
 
     def __init__(self, query: Select, db: AsyncSession):
         self.query = query
@@ -23,37 +23,37 @@ class Paginator(Generic[T]):
         self._page = 1
         self._last_page = None
         self._processors = []
-        self._result = None  # 保存原始查询结果
+        self._result = None  # Save original query result
         
     async def paginate(self, page: int = 1, per_page: int = 10) -> 'Paginator':
-        """执行分页查询"""
+        """Execute paginated query"""
         self._page = max(1, page)
         self._per_page = max(1, per_page)
         
-        # 计算总数
+        # Calculate total count
         if self._total is None:
             total_query = select(func.count()).select_from(self.query.subquery())
             self._total = await self.db.scalar(total_query)
             
-        # 计算最后一页
+        # Calculate last page
         self._last_page = ceil(self._total / self._per_page) if self._per_page > 0 else 0
         
-        # 应用分页
+        # Apply pagination
         paginated_query = self.query.offset((self._page - 1) * self._per_page).limit(self._per_page)
         
-        # 执行查询
+        # Execute query
         self._result = await self.db.execute(paginated_query)
         
-        # 尝试区分单实体查询和多列查询
-        keys = list(self._result.keys())  # 转换为列表，以便后续使用
+        # Try to distinguish single entity queries from multi-column queries
+        keys = list(self._result.keys())  # Convert to list for subsequent use
         if len(keys) == 1:
-            # 单实体查询
+            # Single entity query
             self._items = self._result.scalars().all()
         else:
-            # 多列查询
+            # Multi-column query
             self._items = self._process_multi_column_result(keys)
             
-        # 应用所有处理器（修改为异步处理）
+        # Apply all processors (modified for async processing)
         for processor in self._processors:
             if asyncio.iscoroutinefunction(processor):
                 self._items = await processor(self._items)
@@ -63,7 +63,7 @@ class Paginator(Generic[T]):
         return self
     
     def _process_multi_column_result(self, keys: List[str]) -> List[Any]:
-        """处理多列查询结果"""
+        """Process multi-column query results"""
         if not self._result:
             return []
         
@@ -75,59 +75,59 @@ class Paginator(Generic[T]):
         
         for row in rows:
             if isinstance(row, Row) or isinstance(row, tuple):
-                # 获取主实体（第一列）
+                # Get main entity (first column)
                 main_entity = row[0]
                 
-                # 将额外的列设置为主实体的属性
+                # Set additional columns as attributes of main entity
                 for i in range(1, len(keys)):
-                    # 使用列名作为属性名
+                    # Use column name as attribute name
                     attr_name = keys[i]
                     setattr(main_entity, attr_name, row[i])
                 
                 processed_items.append(main_entity)
             else:
-                # 单列查询
+                # Single column query
                 processed_items.append(row)
                 
         return processed_items
     
     def process(self, callback: Callable[[List[Any]], List[Any]]) -> 'Paginator':
-        """添加处理器函数"""
+        """Add processor function"""
         self._processors.append(callback)
         return self
         
     def map(self, model_class: Type[BaseModel]) -> 'Paginator':
-        """映射到Pydantic模型"""
+        """Map to Pydantic model"""
         def mapper(items):
             mapped_items = []
             for item in items:
-                # 提取实体属性
+                # Extract entity attributes
                 item_dict = {}
                 
-                # 添加所有非内部属性
+                # Add all non-internal attributes
                 for key, value in vars(item).items():
                     if not key.startswith('_'):
                         item_dict[key] = value
                 
-                # 处理关联对象
+                # Handle associated objects
                 for attr_name in dir(item):
                     if attr_name.startswith('_') or attr_name in item_dict:
                         continue
                     
                     try:
                         attr_value = getattr(item, attr_name)
-                        # 检查是否是关联对象
+                        # Check if it's an associated object
                         if hasattr(attr_value, '__table__') or attr_name in model_class.__annotations__:
                             item_dict[attr_name] = attr_value
                     except Exception:
-                        # 忽略无法访问的属性
+                        # Ignore inaccessible attributes
                         pass
                 
-                # 尝试使用model_validate创建实例
+                # Try using model_validate to create instance
                 try:
                     mapped_item = model_class.model_validate(item_dict)
                 except Exception as e:
-                    # 备用方法：直接构造
+                    # Fallback method: direct construction
                     mapped_item = model_class.model_construct(**item_dict)
                 
                 mapped_items.append(mapped_item)
@@ -139,36 +139,36 @@ class Paginator(Generic[T]):
     
     @property
     def items(self) -> List[Any]:
-        """获取当前页的项目"""
+        """Get items for current page"""
         return self._items or []
     
     @property
     def total(self) -> int:
-        """获取总数"""
+        """Get total count"""
         return self._total or 0
     
     @property
     def per_page(self) -> int:
-        """每页项目数"""
+        """Items per page"""
         return self._per_page
     
     @property
     def current_page(self) -> int:
-        """当前页码"""
+        """Current page number"""
         return self._page
     
     @property
     def last_page(self) -> int:
-        """最后一页页码"""
+        """Last page number"""
         return self._last_page or 0
     
     @property
     def has_more(self) -> bool:
-        """是否有更多页"""
+        """Whether there are more pages"""
         return self._page < (self._last_page or 0)
     
     def to_dict(self) -> Dict:
-        """转换为字典"""
+        """Convert to dictionary"""
         return {
             "items": self.items,
             "total": self.total,
@@ -179,11 +179,11 @@ class Paginator(Generic[T]):
         }
     
     def to_json(self) -> Dict:
-        """转换为可JSON序列化的字典"""
+        """Convert to JSON-serializable dictionary"""
         return jsonable_encoder(self.to_dict())
     
     def response(self, message: str = "Success", code: int = 200, http_code: int = 200) -> JSONResponse:
-        """创建API响应"""
+        """Create API response"""
         return JSONResponse(
             content={
                 "code": code,

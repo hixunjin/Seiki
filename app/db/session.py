@@ -12,7 +12,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 @asynccontextmanager
 async def transaction(db: AsyncSession):
-    """事务上下文管理器，自动提交或回滚"""
+    """Transaction context manager with automatic commit or rollback"""
     try:
         yield db
         await db.commit()
@@ -23,7 +23,7 @@ async def transaction(db: AsyncSession):
 
 @asynccontextmanager
 async def async_session():
-    """创建一个异步会话上下文管理器，用于调度任务"""
+    """Create an async session context manager for scheduled tasks"""
     AsyncSessionLocal = get_session_local()
     async with AsyncSessionLocal() as session:
         try:

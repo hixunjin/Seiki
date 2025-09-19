@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     API_PORT: int = 8001
 
+    # Docker port configuration (optional, for docker-compose)
+    REDIS_EXTERNAL_PORT: int = 6386
+    NGINX_HTTP_PORT: int = 8086
+    NGINX_HTTPS_PORT: int = 8446
+    FLOWER_PORT: int = 5556
+
     # Database configuration
     POSTGRES_USER: str = "demo"
     POSTGRES_PASSWORD: str = "demo123"

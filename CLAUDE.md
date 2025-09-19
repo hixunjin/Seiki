@@ -10,6 +10,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use modern, non-deprecated syntax when writing code
 - Use TIMESTAMPTZ type consistently for time fields in database design
 
+#### Code Quality Standards (Applied by CI/CD)
+The project enforces code quality through automated checks in CI/CD pipeline:
+
+**Critical Requirements (CI will fail):**
+- **Flake8 Critical Errors**: Syntax errors, undefined variables, import issues
+  - `E9` - Runtime errors (syntax errors, indentation errors)
+  - `F63` - Invalid syntax in type comments
+  - `F7` - List comprehension redefines variable
+  - `F82` - Undefined name in `__all__`
+
+**Style Guidelines (CI warnings only - won't block deployment):**
+- **Black Formatting**: Consistent code formatting
+  - Line length: 88 characters (Black default)
+  - String quotes: Use double quotes by default
+  - Trailing commas: Add for multi-line constructs
+- **Import Sorting (isort)**: Organized import statements
+  - Standard library imports first
+  - Third-party imports second
+  - Local application imports last
+  - Alphabetical sorting within each group
+
+#### Code Quality Commands
+```bash
+# Check and fix code quality (run in virtual environment)
+source venv/bin/activate && black .                    # Format all Python files
+source venv/bin/activate && isort .                    # Sort all imports
+source venv/bin/activate && flake8 --select=E9,F63,F7,F82  # Check critical errors
+
+# Check specific files
+source venv/bin/activate && black app/api/client/v1/auth.py
+source venv/bin/activate && isort app/services/client/auth.py
+source venv/bin/activate && flake8 --select=E9,F63,F7,F82 app/
+```
+
 ### Design Patterns
 - Obtain service layer instances using dependency injection to improve testability and flexibility
 - Place database model conversion in the service layer to keep the routing layer clean

@@ -55,6 +55,22 @@ source venv/bin/activate && flake8 --select=E9,F63,F7,F82 app/
 
 ## Development Commands
 
+### Docker Development Environment (CRITICAL)
+
+**ALWAYS use Docker for development and API testing. DO NOT start the server manually.**
+
+- **Start development environment**: `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d`
+- **Stop development environment**: `docker-compose -f docker-compose.yml -f docker-compose.dev.yml down`
+- **View logs**: `docker-compose logs -f api`
+- **API Port**: Uses `API_PORT` from `.env` file (check the .env file for the actual port number)
+- **API Base URL**: `http://localhost:{API_PORT}` (where `{API_PORT}` is the value from .env)
+
+**Important Notes**:
+- All API testing MUST use the local Docker environment
+- Do NOT use `python main.py` or other manual methods to start the server
+- The Docker setup includes all necessary services (PostgreSQL, Redis, etc.)
+- Any changes to code will be reflected automatically due to volume mounting
+
 ### Virtual Environment (CRITICAL)
 - **ALWAYS activate virtual environment first**: `source venv/bin/activate`
 - **Command format**: `source venv/bin/activate && python script.py`

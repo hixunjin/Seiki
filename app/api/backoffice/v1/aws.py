@@ -12,7 +12,7 @@ router = APIRouter()
 async def get_temporary_credentials(
     db: Session = Depends(get_db)
 ):
-    """获取S3临时访问凭证"""
+    """Get S3 temporary access credentials"""
     try:
         temporary_credentials = utils.get_temporary_credentials()
         return ApiResponse.success(data=temporary_credentials)

@@ -8,12 +8,12 @@ import glob
 import importlib
 from pathlib import Path
 
-# 获取项目根目录的绝对路径
+# Get project root directory absolute path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# 将项目根目录添加到 Python 路径
+# Add project root directory to Python path
 sys.path.append(BASE_DIR)
 
-# 导入项目配置
+# Import project configuration
 from app.core.config import settings
 from app.db.models import Base
 
@@ -35,7 +35,7 @@ import_all_models()
 # this is the Alembic Config object
 config = context.config
 
-# 使用项目的数据库 URL 覆盖 alembic.ini 中的配置
+# Override alembic.ini database URL with project settings
 config.set_main_option(
     "sqlalchemy.url",
     f"postgresql+psycopg2://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"

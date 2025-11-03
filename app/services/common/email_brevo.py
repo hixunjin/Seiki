@@ -3,7 +3,7 @@ from app.core.config import settings
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from typing import Dict, Any, List, Optional
-from app.services.common.thread_pool import thread_pool_service  # 导入线程池服务
+from app.services.common.thread_pool import thread_pool_service
 
 
 def _send_verification_sync(email: str, verification_code: str):
@@ -11,13 +11,13 @@ def _send_verification_sync(email: str, verification_code: str):
     configuration.api_key['api-key'] = settings.BREVO_API_KEY
     api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
 
-    subject = "验证您的邮箱"
+    subject = "Verify Your Email"
     html_content = f"""
     <html>
         <body>
-            <h2>欢迎注册!</h2>
-            <p>您的验证码是: <strong>{verification_code}</strong></p>
-            <p>该验证码将在30分钟后失效。</p>
+            <h2>Welcome to register!</h2>
+            <p>Your verification code is: <strong>{verification_code}</strong></p>
+            <p>This verification code will expire in 30 minutes.</p>
         </body>
     </html>
     """

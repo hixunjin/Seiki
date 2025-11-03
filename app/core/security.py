@@ -23,8 +23,8 @@ class AuthBase:
         to_encode = {
             "exp": expire,
             "sub": str(subject),
-            "scope": scope,  # 添加scope区分权限
-            "jti": str(uuid.uuid4())  # 唯一标识符
+            "scope": scope,  # Add scope to differentiate permissions
+            "jti": str(uuid.uuid4())  # Unique identifier
         }
         return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
@@ -33,7 +33,7 @@ class AuthBase:
         if expires_delta:
             expire = datetime.now(UTC) + expires_delta
         else:
-            expire = datetime.now(UTC) + timedelta(days=7)  # 默认7天
+            expire = datetime.now(UTC) + timedelta(days=7)  # Default 7 days
 
         to_encode = {
             "exp": expire,

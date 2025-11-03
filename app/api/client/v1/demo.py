@@ -2,14 +2,14 @@ from fastapi import APIRouter
 from app.schemas.response import ApiResponse
 import logging
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-# 创建PDF并在后台处理
+# Create PDF and process in background
 @router.post("")
 async def demo():
     return ApiResponse.success_without_data()

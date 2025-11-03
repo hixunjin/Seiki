@@ -1,6 +1,6 @@
 """
-路由注册中心
-统一管理所有路由配置，避免重复定义
+Route registry
+Centralized management of all route configurations to avoid duplication
 """
 
 from typing import List, Dict
@@ -8,14 +8,14 @@ from app.core.config import settings
 
 
 class RouteConfig:
-    """路由配置类"""
+    """Route configuration class"""
     def __init__(self, module_path: str, prefix: str, tags: List[str]):
         self.module_path = module_path
         self.prefix = prefix
         self.tags = tags
 
 
-# 客户端路由配置
+# Client route configuration
 CLIENT_ROUTES = [
     RouteConfig(
         module_path="app.api.client.v1.demo",
@@ -34,7 +34,7 @@ CLIENT_ROUTES = [
     ),
 ]
 
-# 后台路由配置
+# Backoffice route configuration
 BACKOFFICE_ROUTES = [
     RouteConfig(
         module_path="app.api.backoffice.v1.auth",
@@ -53,33 +53,33 @@ BACKOFFICE_ROUTES = [
     ),
 ]
 
-# 公共路由配置（不分客户端和后台的路由）
+# Common route configuration (routes that are not client or backoffice specific)
 COMMON_ROUTES = [
     RouteConfig(
         module_path="app.api.docs_export",
         prefix="",
-        tags=["API文档导出"]
+        tags=["API Documentation Export"]
     ),
 ]
 
 
 def register_routes(app, route_configs: List[RouteConfig]):
     """
-    动态注册路由
+    Dynamically register routes
 
     Args:
-        app: FastAPI 应用实例
-        route_configs: 路由配置列表
+        app: FastAPI application instance
+        route_configs: List of route configurations
     """
     for route_config in route_configs:
-        # 动态导入模块
+        # Dynamically import module
         module_parts = route_config.module_path.split('.')
         module_name = module_parts[-1]
 
-        # 导入模块
+        # Import module
         module = __import__(route_config.module_path, fromlist=[module_name])
 
-        # 注册路由
+        # Register route
         app.include_router(
             module.router,
             prefix=route_config.prefix,
@@ -88,22 +88,22 @@ def register_routes(app, route_configs: List[RouteConfig]):
 
 
 def get_client_routes() -> List[RouteConfig]:
-    """获取客户端路由配置"""
+    """Get client route configuration"""
     return CLIENT_ROUTES
 
 
 def get_backoffice_routes() -> List[RouteConfig]:
-    """获取后台路由配置"""
+    """Get backoffice route configuration"""
     return BACKOFFICE_ROUTES
 
 
 def get_common_routes() -> List[RouteConfig]:
-    """获取公共路由配置"""
+    """Get common route configuration"""
     return COMMON_ROUTES
 
 
 def get_all_routes() -> Dict[str, List[RouteConfig]]:
-    """获取所有路由配置"""
+    """Get all route configurations"""
     return {
         "client": CLIENT_ROUTES,
         "backoffice": BACKOFFICE_ROUTES,

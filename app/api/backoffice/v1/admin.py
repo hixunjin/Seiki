@@ -20,8 +20,8 @@ async def create_admin(
     db: AsyncSession = Depends(get_db),
     current_admin: Admin = Depends(get_current_admin)
 ):
-    """创建新管理员（仅超级管理员可操作）"""
-    # 验证当前管理员是否为超级管理员
+    """Create new admin (superadmin only)"""
+    # Verify if current admin is superadmin
     if not current_admin.role == "superadmin":
         raise APIException(
             status_code=400,
@@ -43,16 +43,16 @@ async def list_admins(
     db: AsyncSession = Depends(get_db),
     current_admin: Admin = Depends(get_current_admin)
 ):
-    """获取所有管理员列表（仅超级管理员可操作）
-    
+    """Get all admin list (superadmin only)
+
     Args:
-        page: 页码，从1开始
-        per_page: 每页数量
-        email: 可选的邮箱过滤条件
-        sort_by: 排序字段，支持 email 或 created_at
-        sort_order: 排序方向，asc 或 desc
+        page: Page number, starts from 1
+        per_page: Items per page
+        email: Optional email filter condition
+        sort_by: Sort field, supports email or created_at
+        sort_order: Sort direction, asc or desc
     """
-    # 验证当前管理员是否为超级管理员
+    # Verify if current admin is superadmin
     if not current_admin.role == "superadmin":
         raise APIException(
             status_code=400,
@@ -74,8 +74,8 @@ async def get_admin(
     db: AsyncSession = Depends(get_db),
     current_admin: Admin = Depends(get_current_admin)
 ):
-    """获取管理员详情（仅超级管理员可操作，或者管理员本人）"""
-    # 验证权限：超级管理员可以查看任何管理员，普通管理员只能查看自己
+    """Get admin details (superadmin only, or admin themselves)"""
+    # Verify permissions: superadmin can view any admin, regular admin can only view themselves
     if not current_admin.role == "superadmin" and current_admin.id != admin_id:
         raise APIException(
             status_code=403,
@@ -99,15 +99,15 @@ async def update_admin(
     db: AsyncSession = Depends(get_db),
     current_admin: Admin = Depends(get_current_admin)
 ):
-    """更新管理员信息（仅超级管理员可操作，或者管理员本人）"""
-    # 验证权限：超级管理员可以更新任何管理员，普通管理员只能更新自己
+    """Update admin information (superadmin only, or admin themselves)"""
+    # Verify permissions: superadmin can update any admin, regular admin can only update themselves
     if not current_admin.role == "superadmin" and current_admin.id != admin_id:
         raise APIException(
             status_code=403,
             message="Not enough permissions"
         )
-    
-    # 普通管理员不能修改自己的超级管理员状态
+
+    # Regular admin cannot modify their own superadmin status
     if not current_admin.role == "superadmin" and admin_data.role == "superadmin":
         raise APIException(
             status_code=403,
@@ -131,15 +131,15 @@ async def delete_admin(
     db: AsyncSession = Depends(get_db),
     current_admin: Admin = Depends(get_current_admin)
 ):
-    """删除管理员（仅超级管理员可操作）"""
-    # 验证当前管理员是否为超级管理员
+    """Delete admin (superadmin only)"""
+    # Verify if current admin is superadmin
     if not current_admin.role == "superadmin":
         raise APIException(
             status_code=403,
             message="Not enough permissions"
         )
-    
-    # 不能删除自己
+
+    # Cannot delete yourself
     if current_admin.id == admin_id:
         raise APIException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -164,8 +164,8 @@ async def change_password(
     db: AsyncSession = Depends(get_db),
     current_admin: Admin = Depends(get_current_admin)
 ):
-    """修改管理员密码（仅管理员本人）"""
-    # 只能修改自己的密码
+    """Change admin password (admin themselves only)"""
+    # Can only change own password
     if current_admin.id != admin_id:
         raise APIException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -190,8 +190,8 @@ async def reset_password(
     db: AsyncSession = Depends(get_db),
     current_admin: Admin = Depends(get_current_admin)
 ):
-    """重置管理员密码（仅管理员本人和超管可操作）"""
-    # 只能修改自己的密码
+    """Reset admin password (admin themselves and superadmin only)"""
+    # Can only change own password
     if current_admin.role != "superadmin" and current_admin.id != admin_id:
         raise APIException(
             status_code=status.HTTP_403_FORBIDDEN,

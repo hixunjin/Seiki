@@ -144,7 +144,7 @@ async def process_multiple_files(
 
 def extract_docx_text(file_path):
     """
-    从 DOCX 文件中提取文本内容
+    Extract text content from DOCX file
     """
     doc = Document(file_path)
     full_text = []
@@ -155,7 +155,7 @@ def extract_docx_text(file_path):
 
 def extract_pdf_text(file_path: str) -> str:
     """
-    从 PDF 文件中提取文本内容
+    Extract text content from PDF file
     """
     try:
         reader = PdfReader(file_path)
@@ -169,27 +169,27 @@ def extract_pdf_text(file_path: str) -> str:
     except Exception as e:
         raise APIException(
             status_code=400,
-            message=f"PDF 文件解析失败: {str(e)}"
+            message=f"PDF file parsing failed: {str(e)}"
         )
 
 
 def process_csv_file(file_path: str) -> str:
     """
-    处理 CSV 文件并返回格式化的文本内容
+    Process CSV file and return formatted text content
     """
     try:
         # Try using pandas to read (can handle more complex CSV)
         try:
             df = pd.read_csv(file_path)
             # Get basic statistics
-            summary = f"CSV 文件概要:\n"
-            summary += f"总行数: {len(df)}\n"
-            summary += f"总列数: {len(df.columns)}\n"
-            summary += f"列名: {', '.join(df.columns)}\n\n"
+            summary = f"CSV file summary:\n"
+            summary += f"Total rows: {len(df)}\n"
+            summary += f"Total columns: {len(df.columns)}\n"
+            summary += f"Column names: {', '.join(df.columns)}\n\n"
 
             # Add first few rows as preview
             preview_rows = min(5, len(df))
-            summary += f"前 {preview_rows} 行数据预览:\n"
+            summary += f"First {preview_rows} rows preview:\n"
             summary += df.head(preview_rows).to_string()
 
             return summary
@@ -201,9 +201,9 @@ def process_csv_file(file_path: str) -> str:
                 headers = next(csv_reader)  # Get headers
                 rows = list(csv_reader)[:5]  # Get first 5 rows of data
 
-                content = f"CSV 文件内容:\n"
-                content += f"表头: {', '.join(headers)}\n\n"
-                content += "数据预览:\n"
+                content = f"CSV file content:\n"
+                content += f"Headers: {', '.join(headers)}\n\n"
+                content += "Data preview:\n"
                 for row in rows:
                     content += f"{', '.join(row)}\n"
 
@@ -212,13 +212,13 @@ def process_csv_file(file_path: str) -> str:
     except Exception as e:
         raise APIException(
             status_code=400,
-            message=f"CSV 文件解析失败: {str(e)}"
+            message=f"CSV file parsing failed: {str(e)}"
         )
 
 
 def process_audio_file(file_path: str) -> str:
     """
-    处理音频文件并返回转录文本
+    Process audio file and return transcription text
     """
     import whisper
     import os
@@ -246,7 +246,7 @@ def process_audio_file(file_path: str) -> str:
 
 
 def validate_remote_url(url: str) -> bool:
-    """验证远程URL是否有效"""
+    """Validate if remote URL is valid"""
     try:
         parsed = urlparse(url)
         return all([parsed.scheme, parsed.netloc])
@@ -259,10 +259,10 @@ def validate_remote_url(url: str) -> bool:
 
 def get_temporary_credentials() -> Dict:
     """
-    获取AWS S3的临时访问凭证
+    Get temporary access credentials for AWS S3
 
     Returns:
-        Dict: 包含临时凭证的字典，包括access key, secret key和session token
+        Dict: Dictionary containing temporary credentials, including access key, secret key and session token
     """
     # If it's China region, need to specify endpoint_url specifically
     region = settings.AWS_REGION
@@ -318,21 +318,21 @@ def sanitize_html(html_content):
 # HTTP proxy configuration tool
 def configure_http_proxy():
     """
-    配置HTTP代理，仅在测试环境中启用
-    
+    Configure HTTP proxy, only enabled in test environment
+
     Returns:
-        httpx.Client: 配置了代理的httpx客户端，如果不需要代理则返回默认客户端
+        httpx.Client: httpx client configured with proxy, or default client if proxy not needed
     """
     import os
     import httpx
     from ..core.config import settings
-    
+
     # Enable proxy only in test environment
     if settings.ENV == "development" and settings.USE_HTTP_PROXY:
         # Set environment variables
         os.environ["HTTP_PROXY"] = settings.HTTP_PROXY
         os.environ["HTTPS_PROXY"] = settings.HTTPS_PROXY
-        
+
         # Create httpx client configured with proxy
         # Note: proxy URL format in httpx should be complete URL
         proxy_url = settings.HTTP_PROXY
@@ -348,7 +348,7 @@ def configure_http_proxy():
             del os.environ["http_proxy"]
         if "https_proxy" in os.environ:
             del os.environ["https_proxy"]
-    
+
     # Return an httpx client explicitly configured without proxy
     return httpx.Client(timeout=60.0)  
 
@@ -384,36 +384,36 @@ def get_timezone_by_city(city_name, country_code=None):
     from timezonefinder import TimezoneFinder
     from geopy.geocoders import Nominatim
     """
-    通过城市名称获取时区字符串
-    
-    参数:
-        city_name (str): 城市名称
-        country_code (str, optional): 国家代码，如 'CN', 'US' 等
-    
-    返回:
-        str: 时区字符串，如 'Asia/Shanghai'
+    Get timezone string by city name
+
+    Args:
+        city_name (str): City name
+        country_code (str, optional): Country code, such as 'CN', 'US', etc.
+
+    Returns:
+        str: Timezone string, such as 'Asia/Shanghai'
     """
     try:
         # Initialize geocoder
         geolocator = Nominatim(user_agent="timezone_app")
-        
+
         # Build query string
         query = city_name
         if country_code:
             query = f"{city_name}, {country_code}"
-            
+
         # Get geographical location of the city
         location = geolocator.geocode(query)
-        
+
         if location is None:
             return None
-            
+
         # Use TimezoneFinder to find timezone
         tf = TimezoneFinder()
         timezone_str = tf.timezone_at(lng=location.longitude, lat=location.latitude)
-        
+
         return timezone_str
-        
+
     except Exception as e:
-        print(f"获取时区时出错: {e}")
+        print(f"Error getting timezone: {e}")
         return None

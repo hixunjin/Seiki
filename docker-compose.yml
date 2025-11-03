@@ -2,7 +2,7 @@ services:
   # FastAPI应用
   app:
     build: .
-    container_name: prepwise-app
+    container_name: ${PROJECT_NAME:-folkyn}-app
     restart: unless-stopped
     environment:
       - ENV=production
@@ -15,7 +15,7 @@ services:
     depends_on:
       - redis
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8006/api/v1/config/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:${API_PORT:-8001}/api/v1/config/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -24,7 +24,7 @@ services:
   # Celery Worker
   celery-worker:
     build: .
-    container_name: prepwise-celery-worker
+    container_name: ${PROJECT_NAME:-folkyn}-celery-worker
     restart: unless-stopped
     command: celery -A app.core.celery_app worker --loglevel=info
     env_file:
@@ -40,7 +40,7 @@ services:
   # Celery Beat (调度器)
   celery-beat:
     build: .
-    container_name: prepwise-celery-beat
+    container_name: ${PROJECT_NAME:-folkyn}-celery-beat
     restart: unless-stopped
     command: celery -A app.core.celery_app beat --loglevel=info
     env_file:
@@ -57,7 +57,7 @@ services:
   # Redis缓存和消息队列
   redis:
     image: redis:7-alpine
-    container_name: prepwise-redis
+    container_name: ${PROJECT_NAME:-folkyn}-redis
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
@@ -75,7 +75,7 @@ services:
   # Nginx反向代理 (默认启用)
   nginx:
     image: nginx:alpine
-    container_name: prepwise-nginx
+    container_name: ${PROJECT_NAME:-folkyn}-nginx
     restart: unless-stopped
     ports:
       - "${NGINX_HTTP_PORT:-8080}:80"
@@ -96,7 +96,7 @@ services:
   # Flower - Celery监控(可选)
   flower:
     build: .
-    container_name: prepwise-flower
+    container_name: ${PROJECT_NAME:-folkyn}-flower
     restart: unless-stopped
     command: celery -A app.core.celery_app flower --port=5555
     ports:

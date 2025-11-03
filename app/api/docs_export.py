@@ -1,6 +1,6 @@
 """
-OpenAPI JSON 导出路由
-提供独立的API文档JSON下载功能，方便导入到其他API管理工具
+OpenAPI JSON export routes
+Provide standalone API documentation JSON download functionality for importing to other API management tools
 """
 
 from fastapi import APIRouter, Response
@@ -8,18 +8,18 @@ from fastapi.responses import JSONResponse
 from app.configs.docs_apps import create_client_app, create_backoffice_app
 import json
 
-router = APIRouter(prefix="/api-docs", tags=["API文档导出"])
+router = APIRouter(prefix="/api-docs", tags=["API Documentation Export"])
 
-@router.get("/client.json", summary="客户端API文档JSON", description="下载客户端API的OpenAPI JSON格式文档，可导入到Postman、Insomnia等工具")
+@router.get("/client.json", summary="Client API Documentation JSON", description="Download client API OpenAPI JSON documentation, can be imported to Postman, Insomnia, etc.")
 async def get_client_openapi_json():
     """
-    获取客户端API的OpenAPI JSON文档
-    用于导入到Postman、Insomnia、ApiPost等API管理工具
+    Get client API OpenAPI JSON documentation
+    For importing to Postman, Insomnia, ApiPost and other API management tools
     """
     client_app = create_client_app()
     openapi_schema = client_app.openapi()
-    
-    # 设置响应头，提示下载
+
+    # Set response headers, prompt download
     headers = {
         "Content-Disposition": "attachment; filename=client-api.json",
         "Content-Type": "application/json"
@@ -30,16 +30,16 @@ async def get_client_openapi_json():
         headers=headers
     )
 
-@router.get("/backoffice.json", summary="后台管理API文档JSON", description="下载后台管理API的OpenAPI JSON格式文档，包含JWT认证配置")
+@router.get("/backoffice.json", summary="Backoffice API Documentation JSON", description="Download backoffice API OpenAPI JSON documentation, includes JWT authentication configuration")
 async def get_backoffice_openapi_json():
     """
-    获取后台管理API的OpenAPI JSON文档
-    包含完整的JWT认证配置，用于导入到API管理工具
+    Get backoffice API OpenAPI JSON documentation
+    Includes complete JWT authentication configuration for importing to API management tools
     """
     backoffice_app = create_backoffice_app()
     openapi_schema = backoffice_app.openapi()
-    
-    # 设置响应头，提示下载
+
+    # Set response headers, prompt download
     headers = {
         "Content-Disposition": "attachment; filename=backoffice-api.json",
         "Content-Type": "application/json"
@@ -50,43 +50,43 @@ async def get_backoffice_openapi_json():
         headers=headers
     )
 
-@router.get("/", summary="API文档导出说明")
+@router.get("/", summary="API Documentation Export Guide")
 async def api_docs_info():
     """
-    API文档导出功能说明
+    API documentation export functionality guide
     """
     return {
-        "message": "FastAPI Template - API文档导出功能",
-        "description": "提供OpenAPI JSON格式的API文档，可导入到各种API管理工具",
+        "message": "FastAPI Template - API Documentation Export",
+        "description": "Provide OpenAPI JSON format API documentation for importing to various API management tools",
         "downloads": {
             "client": {
                 "url": "/api-docs/client.json",
-                "description": "客户端API文档（无认证，包含AWS功能）",
+                "description": "Client API documentation (no authentication, includes AWS features)",
                 "filename": "client-api.json",
-                "features": ["演示接口", "配置管理", "AWS S3上传"]
+                "features": ["Demo endpoints", "Configuration management", "AWS S3 upload"]
             },
             "backoffice": {
-                "url": "/api-docs/backoffice.json", 
-                "description": "后台管理API文档（包含JWT认证）",
+                "url": "/api-docs/backoffice.json",
+                "description": "Backoffice API documentation (includes JWT authentication)",
                 "filename": "backoffice-api.json",
-                "features": ["认证管理", "管理员管理", "AWS管理", "权限控制"]
+                "features": ["Authentication management", "Admin management", "AWS management", "Permission control"]
             }
         },
         "import_guides": {
-            "postman": "在Postman中选择 Import > Upload Files 导入JSON文件",
-            "insomnia": "在Insomnia中选择 Import/Export > Import Data 导入JSON文件",
-            "apipost": "在ApiPost中选择导入 > OpenAPI 导入JSON文件",
-            "swagger_editor": "在Swagger Editor中选择 File > Import File 导入JSON文件",
-            "apifox": "在Apifox中选择导入 > 从URL/文件导入 > OpenAPI格式"
+            "postman": "In Postman, select Import > Upload Files to import JSON file",
+            "insomnia": "In Insomnia, select Import/Export > Import Data to import JSON file",
+            "apipost": "In ApiPost, select Import > OpenAPI to import JSON file",
+            "swagger_editor": "In Swagger Editor, select File > Import File to import JSON file",
+            "apifox": "In Apifox, select Import > From URL/File > OpenAPI format"
         },
         "authentication": {
-            "client": "客户端API无需认证，直接使用",
-            "backoffice": "后台API需要JWT认证，导入后请在工具中配置Bearer Token认证方式"
+            "client": "Client API requires no authentication, use directly",
+            "backoffice": "Backoffice API requires JWT authentication, configure Bearer Token authentication in tool after import"
         },
         "technical_info": {
             "openapi_version": "3.0.2",
             "framework": "FastAPI",
             "authentication": "JWT Bearer Token",
-            "response_format": "统一ApiResponse格式"
+            "response_format": "Unified ApiResponse format"
         }
     }

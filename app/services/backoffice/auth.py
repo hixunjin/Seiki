@@ -13,7 +13,7 @@ from app.exceptions.http_exceptions import APIException
 class BackofficeAuthService(AuthBase):
     @staticmethod
     async def authenticate_admin(db: AsyncSession, email: str, password: str) -> Optional[Admin]:
-        """管理员认证"""
+        """Admin authentication"""
         admin_query = select(Admin).where(Admin.email == email)
         result = await db.execute(admin_query)
         admin = result.scalar_one_or_none()
@@ -24,7 +24,7 @@ class BackofficeAuthService(AuthBase):
 
     @staticmethod
     async def login(db: AsyncSession, email: str, password: str) -> Dict:
-        """管理员登录"""
+        """Admin login"""
         async with transaction(db):
             admin = await BackofficeAuthService.authenticate_admin(db, email, password)
             if not admin:
@@ -32,22 +32,22 @@ class BackofficeAuthService(AuthBase):
             if not admin.is_active:
                 raise APIException(status_code=400, message="Admin account is inactive")
 
-            # 标记旧token为无效
+            # Mark old tokens as inactive
             stmt = update(AdminToken).where(
                 (AdminToken.admin_id == admin.id) &
                 (AdminToken.is_active == True)
             ).values(is_active=False)
             await db.execute(stmt)
 
-            # 生成新的access token和refresh token
+            # Generate new access token and refresh token
             access_token = AuthBase.create_access_token(
                 str(admin.id),
-                scope="backoffice",  # 区分客户端和后台
+                scope="backoffice",  # Distinguish between client and backoffice
                 expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             )
             refresh_token = AuthBase.create_refresh_token(str(admin.id))
 
-            # 存储新的refresh token
+            # Store new refresh token
             hashed_token = AuthBase.hash_token(refresh_token)
             token = AdminToken(
                 admin_id=admin.id,
@@ -66,7 +66,7 @@ class BackofficeAuthService(AuthBase):
 
     @staticmethod
     async def refresh_token(db: AsyncSession, refresh_token: str) -> Dict:
-        """刷新管理员token"""
+        """Refresh admin token"""
         payload = AuthBase.verify_token(refresh_token, scope="refresh")
         if not payload:
             raise APIException(status_code=401, message="Invalid refresh token")
@@ -94,10 +94,10 @@ class BackofficeAuthService(AuthBase):
 
     @staticmethod
     async def logout(db: AsyncSession, refresh_token: str) -> None:
-        """管理员登出"""
+        """Admin logout"""
         payload = AuthBase.verify_token(refresh_token, scope="backoffice")
         if not payload:
-            return  # 忽略无效token
+            return  # Ignore invalid token
 
         admin_id = payload.get("sub")
         token_query = select(AdminToken).where(

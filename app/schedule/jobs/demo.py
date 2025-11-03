@@ -12,19 +12,19 @@ def execute():
     This is a simple task that logs a message and demonstrates database connectivity
     """
     logger.info("=== DEMO TASK EXECUTION STARTED ===")
-    
-    # 创建此任务专用的数据库引擎和会话工厂
+
+    # Create dedicated database engine and session factory for this task
     scheduler_engine = create_scheduler_engine()
     SchedulerSessionLocal = create_scheduler_session_factory(scheduler_engine)
-    
-    # 使用新创建的会话工厂
+
+    # Use newly created session factory
     try:
         # This would be an async function in FastAPI context, but Celery tasks should be synchronous
         # So we're using a synchronous approach here
         logger.info("Connecting to database...")
         # You could add your database operations here
         logger.info("Database operations completed")
-        
+
     except Exception as e:
         logger.error(f"Error in demo task: {e}", exc_info=True)
         raise

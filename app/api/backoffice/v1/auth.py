@@ -15,7 +15,7 @@ async def login(
     login_data: Login,
     db: AsyncSession = Depends(get_db)
 ):
-    """管理员登录"""
+    """Admin login"""
     result = await backoffice_auth_service.login(db, login_data.email, login_data.password)
     return ApiResponse.success(data=result)
 
@@ -25,7 +25,7 @@ async def refresh(
     request: RefreshToken,
     db: AsyncSession = Depends(get_db)
 ):
-    """刷新管理员token"""
+    """Refresh admin token"""
     result = await backoffice_auth_service.refresh_token(db, request.refresh_token)
     return ApiResponse.success(data=result)
 
@@ -35,7 +35,7 @@ async def logout(
     request: Logout,
     db: AsyncSession = Depends(get_db),
 ):
-    """管理员登出"""
+    """Admin logout"""
     await backoffice_auth_service.logout(db, request.refresh_token)
     return ApiResponse.success_without_data()
     

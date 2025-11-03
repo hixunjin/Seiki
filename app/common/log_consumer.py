@@ -8,13 +8,13 @@ from app.services.common.redis import RedisClient
 
 async def consume_logs_forever(redis_key='app:logs'):
     """
-    从Redis队列中消费日志并写入文件（异步版本）
+    Consume logs from Redis queue and write to file (async version)
     """
-    # 创建独立的Redis客户端实例，确保在正确的事件循环中运行
+    # Create independent Redis client instance, ensure it runs in the correct event loop
     local_redis_client = RedisClient()
-    
-    # 修复BASE_DIR计算，确保与log_config.py一致
-    # 当前文件在app/common/log_consumer.py，所以需要向上三级目录才能到达项目根目录
+
+    # Fix BASE_DIR calculation to be consistent with log_config.py
+    # Current file is at app/common/log_consumer.py, need to go up three levels to reach project root
     script_path = os.path.abspath(__file__)
     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(script_path), "../.."))
     
@@ -69,8 +69,8 @@ async def consume_logs_forever(redis_key='app:logs'):
                     else:
                         file_handler.handle(record)
             except Exception as e:
-                print(f"[LogConsumer] 处理日志时出错: {e}")
+                print(f"[LogConsumer] Error processing log: {e}")
                 await asyncio.sleep(1)
     finally:
-        # 确保关闭Redis连接
+        # Ensure Redis connection is closed
         await local_redis_client.close()

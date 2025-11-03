@@ -1,6 +1,6 @@
 """
-分离的FastAPI应用工厂
-提供Client和Backoffice的独立文档应用
+Separated FastAPI application factories
+Provides independent documentation applications for Client and Backoffice
 """
 
 from fastapi import FastAPI
@@ -19,14 +19,14 @@ from app.configs.backoffice_swagger_config import (
     BACKOFFICE_SECURITY_SCHEMES
 )
 
-# 根据环境设置CORS来源
+# Set CORS origins based on environment
 ALLOWED_ORIGINS = ["*"] if settings.ENV == "development" or settings.ENV == "preview" else [
     "*"  # TODO: replace with production domain
 ]
 
 def create_client_app() -> FastAPI:
     """
-    创建客户端API文档应用
+    Create Client API documentation application
     """
     app = FastAPI(
         title=CLIENT_OPENAPI_INFO["title"],
@@ -41,7 +41,7 @@ def create_client_app() -> FastAPI:
         swagger_ui_parameters=CLIENT_SWAGGER_UI_PARAMETERS,
     )
 
-    # 配置CORS
+    # Configure CORS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=ALLOWED_ORIGINS,
@@ -50,7 +50,7 @@ def create_client_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # 使用路由注册中心注册客户端路由
+    # Register client routes using route registry
     from app.route.router_registry import register_routes, get_client_routes
     register_routes(app, get_client_routes())
 
@@ -59,7 +59,7 @@ def create_client_app() -> FastAPI:
 
 def create_backoffice_app() -> FastAPI:
     """
-    创建后台管理API文档应用
+    Create Backoffice management API documentation application
     """
     app = FastAPI(
         title=BACKOFFICE_OPENAPI_INFO["title"],
@@ -74,7 +74,7 @@ def create_backoffice_app() -> FastAPI:
         swagger_ui_parameters=BACKOFFICE_SWAGGER_UI_PARAMETERS,
     )
 
-    # 配置CORS
+    # Configure CORS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=ALLOWED_ORIGINS,
@@ -83,11 +83,11 @@ def create_backoffice_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # 使用路由注册中心注册后台路由
+    # Register backoffice routes using route registry
     from app.route.router_registry import register_routes, get_backoffice_routes
     register_routes(app, get_backoffice_routes())
 
-    # 自定义OpenAPI schema以添加JWT认证配置
+    # Customize OpenAPI schema to add JWT authentication configuration
     def custom_openapi():
         if app.openapi_schema:
             return app.openapi_schema
@@ -101,13 +101,13 @@ def create_backoffice_app() -> FastAPI:
             contact=BACKOFFICE_OPENAPI_INFO["contact"],
             license_info=BACKOFFICE_OPENAPI_INFO["license_info"],
         )
-        
-        # 添加JWT认证配置
+
+        # Add JWT authentication configuration
         openapi_schema["components"]["securitySchemes"] = BACKOFFICE_SECURITY_SCHEMES
-        
-        # 为需要认证的接口添加安全配置（除了登录接口）
+
+        # Add security configuration to endpoints requiring authentication (except login endpoint)
         for path, methods in openapi_schema["paths"].items():
-            if "/backoffice/auth/login" not in path:  # 登录接口不需要认证
+            if "/backoffice/auth/login" not in path:  # Login endpoint doesn't require authentication
                 for method_name, method_info in methods.items():
                     if method_name in ["get", "post", "put", "delete", "patch"]:
                         method_info["security"] = [{"BearerAuth": []}]

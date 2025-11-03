@@ -6,13 +6,13 @@ class ThreadPoolService:
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
 
     def get_executor(self):
-        """获取线程池实例"""
+        """Get thread pool instance"""
         return self.executor
 
     def shutdown(self):
-        """关闭线程池"""
+        """Shutdown thread pool"""
         self.executor.shutdown(wait=False)
 
 
-# 全局单例实例
+# Global singleton instance
 thread_pool_service = ThreadPoolService()

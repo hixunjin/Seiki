@@ -11,45 +11,45 @@ logger = logging.getLogger(__name__)
 
 def setup_scheduler(app: FastAPI = None):
     """
-    初始化定时任务调度器，使用 Celery
-    
+    Initialize scheduled task scheduler using Celery
+
     Args:
-        app: FastAPI应用实例
+        app: FastAPI application instance
     """
     if not app:
         logger.error("FastAPI app instance is required for scheduler setup")
         return
-    
-    # 使用文件锁确保只有一个进程运行调度器初始化
+
+    # Use file lock to ensure only one process runs scheduler initialization
     lock_file_path = os.path.join(tempfile.gettempdir(), "tip_scheduler.lock")
     logger.info(f"Lock file path: {lock_file_path}")
-    
+
     try:
-        # 检查锁文件是否存在
+        # Check if lock file exists
         if os.path.exists(lock_file_path):
-            # 读取锁文件中的进程ID
+            # Read process ID from lock file
             try:
                 with open(lock_file_path, "r") as f:
                     pid = f.read().strip()
-                    
-                # 检查该进程是否仍在运行
+
+                # Check if the process is still running
                 try:
-                    os.kill(int(pid), 0)  # 检查进程是否存在
+                    os.kill(int(pid), 0)  # Check if process exists
                     logger.info(f"Scheduler lock exists. Process {pid} is running the scheduler.")
-                    # 此进程不运行调度器初始化
+                    # This process will not run scheduler initialization
                     logger.info(f"Process {os.getpid()} will not initialize the scheduler.")
                     scheduler_enabled = False
                 except ProcessLookupError:
-                    # 进程不存在，删除旧锁文件
+                    # Process doesn't exist, remove stale lock file
                     logger.warning(f"Process {pid} in lock file is not running. Removing stale lock file.")
                     os.remove(lock_file_path)
-                    # 创建新锁文件
+                    # Create new lock file
                     with open(lock_file_path, "w") as f:
                         f.write(str(os.getpid()))
                     logger.info(f"Acquired scheduler lock. This process (PID: {os.getpid()}) will initialize the scheduler.")
                     scheduler_enabled = True
             except Exception as e:
-                # 如果读取锁文件失败，删除锁文件并创建新的
+                # If reading lock file fails, remove lock file and create new one
                 logger.warning(f"Could not read scheduler lock file: {e}. Creating new lock.")
                 os.remove(lock_file_path)
                 with open(lock_file_path, "w") as f:
@@ -57,14 +57,14 @@ def setup_scheduler(app: FastAPI = None):
                 logger.info(f"Acquired scheduler lock. This process (PID: {os.getpid()}) will initialize the scheduler.")
                 scheduler_enabled = True
         else:
-            # 锁文件不存在，创建新锁文件
+            # Lock file doesn't exist, create new lock file
             with open(lock_file_path, "w") as f:
                 f.write(str(os.getpid()))
             logger.info(f"Acquired scheduler lock. This process (PID: {os.getpid()}) will initialize the scheduler.")
             scheduler_enabled = True
     except Exception as e:
         logger.error(f"Error handling scheduler lock: {e}")
-        # 出错时默认不启用调度器
+        # Default to not enabling scheduler on error
         scheduler_enabled = False
     
     if scheduler_enabled:
@@ -74,7 +74,7 @@ def setup_scheduler(app: FastAPI = None):
 
 def shutdown_scheduler():
     """
-    关闭调度器 - 对于Celery, 不需要特殊操作，
-    因为Celery worker和beat进程是独立的进程
+    Shutdown scheduler - For Celery, no special actions needed
+    because Celery worker and beat processes are independent processes
     """
     logger.info("Celery scheduler shutdown - no special actions needed")

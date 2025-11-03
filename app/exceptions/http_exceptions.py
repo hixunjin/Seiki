@@ -15,11 +15,11 @@ class APIException(HTTPException):
         # Translate the message based on the language
         translated_message = get_message(message, language)
         super().__init__(status_code=status_code, detail=translated_message)
-        self.code = code  # 业务错误码
-        self.data = data  # 可选的额外数据
+        self.code = code  # Business error code
+        self.data = data  # Optional additional data
 
 
-# 常见异常类型
+# Common exception types
 class ValidationError(APIException):
     def __init__(self, message: str = "Validation error", data: Any = None, language: Optional[str] = None):
         super().__init__(code=1001, message=message, status_code=400, data=data, language=language)

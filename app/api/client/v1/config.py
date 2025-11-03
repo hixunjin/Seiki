@@ -11,8 +11,8 @@ router = APIRouter()
 @router.get("/health")
 async def health_check():
     """
-    健康检查端点
-    检查应用状态、数据库连接和Redis连接
+    Health check endpoint
+    Check application status, database connection and Redis connection
     """
     health_status = {
         "status": "healthy",
@@ -23,7 +23,7 @@ async def health_check():
         }
     }
 
-    # 检查数据库连接
+    # Check database connection
     try:
         async for db in get_db():
             result = await db.execute(text("SELECT 1"))
@@ -34,16 +34,16 @@ async def health_check():
         health_status["services"]["database"] = "down"
         health_status["status"] = "unhealthy"
 
-    # 检查Redis连接
+    # Check Redis connection
     try:
-        # 使用Redis PING命令测试连接
+        # Use Redis PING command to test connection
         await redis_client.redis.ping()
         health_status["services"]["redis"] = "up"
     except Exception:
         health_status["services"]["redis"] = "down"
         health_status["status"] = "unhealthy"
 
-    # 如果任何服务不健康，返回503状态码
+    # If any service is unhealthy, return 503 status code
     if health_status["status"] == "unhealthy":
         return ApiResponse.failed(
             message="Service unhealthy",

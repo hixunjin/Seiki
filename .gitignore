@@ -41,3 +41,7 @@ app/nltk_data
 
 # others
 shell/
+mcp/
+.mcp.json
+.claude
+.codex

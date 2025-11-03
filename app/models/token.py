@@ -9,7 +9,7 @@ class Token(BaseModel):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    token = Column(String(255), unique=True, index=True)  # 存储hashed refresh token
+    token = Column(String(255), unique=True, index=True)  # Store hashed refresh token
     expires_at = Column(TIMESTAMP(timezone=True), nullable=False)
     last_used_at = Column(TIMESTAMP(timezone=True), default=func.now(), onupdate=func.now())
     is_active = Column(Boolean, default=True)
@@ -22,7 +22,7 @@ class AdminToken(BaseModel):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     admin_id = Column(Integer, ForeignKey("admins.id"), nullable=False)
-    token = Column(String(255), unique=True, index=True)  # 存储hashed refresh token
+    token = Column(String(255), unique=True, index=True)  # Store hashed refresh token
     expires_at = Column(TIMESTAMP(timezone=True), nullable=False)
     last_used_at = Column(TIMESTAMP(timezone=True), default=func.now(), onupdate=func.now())
     is_active = Column(Boolean, default=True)

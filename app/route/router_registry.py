@@ -18,6 +18,16 @@ class RouteConfig:
 # Client route configuration
 CLIENT_ROUTES = [
     RouteConfig(
+        module_path="app.api.client.v1.auth",
+        prefix=f"{settings.API_V1_STR}/auth",
+        tags=["client-auth"]
+    ),
+    RouteConfig(
+        module_path="app.api.client.v1.team",
+        prefix=f"{settings.API_V1_STR}/team",
+        tags=["client-team"]
+    ),
+    RouteConfig(
         module_path="app.api.client.v1.demo",
         prefix=f"{settings.API_V1_STR}/demo",
         tags=["client-demo"]

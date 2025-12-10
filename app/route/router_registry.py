@@ -28,6 +28,11 @@ CLIENT_ROUTES = [
         tags=["client-team"]
     ),
     RouteConfig(
+        module_path="app.api.client.v1.inventory",
+        prefix=f"{settings.API_V1_STR}/inventory",
+        tags=["client-inventory"]
+    ),
+    RouteConfig(
         module_path="app.api.client.v1.demo",
         prefix=f"{settings.API_V1_STR}/demo",
         tags=["client-demo"]

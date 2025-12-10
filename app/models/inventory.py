@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean
+from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
 
 
@@ -20,3 +21,11 @@ class Inventory(BaseModel):
     network_name = Column(String(255), nullable=False)
     media_owner_name = Column(String(255), nullable=False)
     status = Column(String(50), nullable=False, default="active")
+
+    # 关联的活动列表（多对多，通过中间表）
+    campaigns = relationship(
+        "Campaign",
+        secondary="campaign_inventories",
+        back_populates="inventories",
+        lazy="selectin",
+    )

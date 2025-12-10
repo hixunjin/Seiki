@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from app.db.session import get_db, transaction
@@ -19,6 +22,22 @@ from app.services.client.inventory import inventory_service
 
 router = APIRouter()
 
+# Path to static template file
+TEMPLATE_FILE = Path(__file__).resolve().parent.parent.parent.parent / "static" / "inventory_template.csv"
+
+
+@router.get("/template")
+async def download_template():
+    """Download the CSV template for inventory import.
+
+    Returns a CSV file that users can fill in and upload via /import.
+    """
+    return FileResponse(
+        path=TEMPLATE_FILE,
+        filename="inventory_template.csv",
+        media_type="text/csv",
+    )
+
 
 @router.post("", response_model=InventoryResponse)
 async def create_inventory(
@@ -35,6 +54,37 @@ async def create_inventory(
             db=db,
             current_user=current_user,
             data=data,
+        )
+        return ApiResponse.success(data=result)
+
+
+@router.post("/import")
+async def import_inventories(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Import inventories from a CSV/XLS file.
+
+    Expected format (semicolon-separated, no loop_timing column):
+
+    face_id;billboard_type;is_indoor;latitude;longitude;address;height_from_ground;\
+azimuth_from_north;width;height;network_name;media_owner_name
+    """
+    import csv
+    import io
+
+    content = await file.read()
+    text = content.decode("utf-8-sig")
+
+    reader = csv.DictReader(io.StringIO(text), delimiter=';')
+    rows = list(reader)
+
+    async with transaction(db):
+        result = await inventory_service.import_from_rows(
+            db=db,
+            current_user=current_user,
+            rows=rows,
         )
         return ApiResponse.success(data=result)
 
@@ -99,9 +149,6 @@ async def list_inventories(
 
     if filters.media_owner_name:
         query = query.where(Inventory.media_owner_name == filters.media_owner_name)
-    elif current_user.company_name:
-        # Default to current user's company if not specified
-        query = query.where(Inventory.media_owner_name == current_user.company_name)
 
     if filters.network_name:
         query = query.where(Inventory.network_name == filters.network_name)
@@ -155,6 +202,43 @@ async def list_inventories(
     )
 
 
+@router.get("/tree/search")
+async def search_inventory_owners(
+    keyword: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Search media owners by keyword matching media_owner_name or network_name.
+
+    Returns media owners whose name matches the keyword, OR who have networks
+    matching the keyword. Each result includes the billboard count.
+    """
+    kw = f"%{keyword.strip()}%"
+
+    # Find media owners where:
+    # 1. media_owner_name matches keyword, OR
+    # 2. any of their network_name matches keyword
+    query = (
+        select(Inventory.media_owner_name, func.count().label("total"))
+        .where(
+            or_(
+                Inventory.media_owner_name.ilike(kw),
+                Inventory.network_name.ilike(kw),
+            )
+        )
+        .group_by(Inventory.media_owner_name)
+        .order_by(Inventory.media_owner_name)
+    )
+
+    result = await db.execute(query)
+    rows = result.all()
+    data = [
+        InventoryOwnerNode(media_owner_name=row[0], total=row[1])
+        for row in rows
+    ]
+    return ApiResponse.success(data=data)
+
+
 @router.get("/tree/owners")
 async def get_inventory_owners(
     db: AsyncSession = Depends(get_db),
@@ -164,14 +248,11 @@ async def get_inventory_owners(
 
     For media owner clients, this will typically return only their own company.
     """
+    # Platform view: aggregate over all media owners (no company restriction)
     query = (
         select(Inventory.media_owner_name, func.count().label("total"))
         .group_by(Inventory.media_owner_name)
     )
-
-    # Restrict to current user's company if they are a media owner
-    if current_user.company_name:
-        query = query.where(Inventory.media_owner_name == current_user.company_name)
 
     result = await db.execute(query)
     rows = result.all()

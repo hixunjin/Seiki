@@ -1,0 +1,4 @@
+face_id;billboard_type;is_indoor;latitude;longitude;address;height_from_ground;azimuth_from_north;width;height;network_name;media_owner_name
+text001;digital bridges;No;48.8566;2.3522;Paris France;5;180;3;2;Network A;MediaOwner X
+tex002;maxi billboards;Yes;48.8584;2.2945;Paris France;3;90;4;3;Network B;MediaOwner Y
+text003;digital screens;No;48.8606;2.3376;Paris France;2;270;2;1.5;Network C;MediaOwner Z

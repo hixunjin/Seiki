@@ -1,9 +1,16 @@
+from typing import List, Dict
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import status
 from app.models.inventory import Inventory
 from app.models.user import User, TeamRole, OrganizationType
-from app.schemas.client.inventory import InventoryCreate, InventoryUpdate, InventoryResponse
+from app.schemas.client.inventory import (
+    InventoryCreate,
+    InventoryUpdate,
+    InventoryResponse,
+    InventoryStatus,
+)
 from app.exceptions.http_exceptions import APIException
 
 
@@ -85,10 +92,8 @@ class InventoryService:
 
         Restrict to inventories under current user's company when company_name is set.
         """
+        # Platform view: allow viewing any inventory by id (no company filter).
         query = select(Inventory).where(Inventory.id == inventory_id)
-
-        if current_user.company_name:
-            query = query.where(Inventory.media_owner_name == current_user.company_name)
 
         result = await db.execute(query)
         inventory = result.scalar_one_or_none()
@@ -128,10 +133,8 @@ class InventoryService:
                 message="Only media owners can update inventory",
             )
 
-        # Load inventory within current user's company
+        # Platform view: load inventory by id only (no company restriction)
         query = select(Inventory).where(Inventory.id == inventory_id)
-        if current_user.company_name:
-            query = query.where(Inventory.media_owner_name == current_user.company_name)
 
         result = await db.execute(query)
         inventory = result.scalar_one_or_none()
@@ -213,10 +216,8 @@ class InventoryService:
                 message="Only media owners can delete inventory",
             )
 
-        # Find inventory by face_id within current user's company
+        # Platform view: find inventory by face_id only (no company restriction)
         query = select(Inventory).where(Inventory.face_id == face_id)
-        if current_user.company_name:
-            query = query.where(Inventory.media_owner_name == current_user.company_name)
 
         result = await db.execute(query)
         inventory = result.scalar_one_or_none()
@@ -228,6 +229,109 @@ class InventoryService:
 
         await db.delete(inventory)
         await db.flush()
+
+    @staticmethod
+    async def import_from_rows(
+        db: AsyncSession,
+        current_user: User,
+        rows: List[Dict[str, str]],
+    ) -> Dict:
+        """Bulk import inventories from parsed CSV/XLS rows.
+
+        Each row must contain the 13 columns defined by the template.
+        Default status is active. Loop timing is not provided.
+        """
+        created = 0
+        skipped = 0
+        errors: List[Dict[str, str]] = []
+
+        # Permission check is same as create (only owner/admin of media owners)
+        if current_user.role not in [TeamRole.OWNER.value, TeamRole.ADMIN.value]:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only owner or admin can import inventory",
+            )
+
+        org_type_normalized = (current_user.organization_type or "").replace("-", " ").lower()
+        media_owner_normalized = OrganizationType.MEDIA_OWNER.value.lower()
+        if org_type_normalized != media_owner_normalized:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only media owners can import inventory",
+            )
+
+        # Helper to normalize boolean from 'Yes'/'No'
+        def parse_bool(value: str) -> bool:
+            v = (value or "").strip().lower()
+            return v in {"yes", "y", "true", "1"}
+
+        # Helper to parse float, treating empty as 0.0
+        def parse_float(value: str) -> float:
+            v = (value or "").strip()
+            if not v:
+                return 0.0
+            return float(v)
+
+        # Map raw type from file to canonical billboard type
+        type_map = {
+            "digital bridges": "Digital Bridge",
+            "digital bridge": "Digital Bridge",
+            "static unipole": "Static Unipole",
+            "digital unipole": "Digital Unipole",
+            "digital hoarding": "Digital Hoarding",
+            "digital screens": "Digital Screen",
+            "digital screen": "Digital Screen",
+            "digital gate": "Digital Gate",
+            "maxi billboards": "Maxi Billboards",
+        }
+
+        for idx, row in enumerate(rows, start=1):
+            try:
+                raw_type = (row.get("billboard_type") or "").strip()
+                key = raw_type.lower()
+                billboard_type = type_map.get(key) or raw_type
+
+                is_indoor = parse_bool(row.get("is_indoor") or "")
+
+                data = InventoryCreate(
+                    face_id=(row.get("face_id") or "").strip(),
+                    billboard_type=billboard_type,
+                    custom_billboard_type=None,
+                    latitude=parse_float(row.get("latitude") or "0"),
+                    longitude=parse_float(row.get("longitude") or "0"),
+                    height_from_ground=parse_float(row.get("height_from_ground") or "0"),
+                    loop_timing=None,
+                    address=(row.get("address") or "").strip() or None,
+                    is_indoor=is_indoor,
+                    azimuth_from_north=parse_float(row.get("azimuth_from_north") or "0"),
+                    width=parse_float(row.get("width") or "0"),
+                    height=parse_float(row.get("height") or "0"),
+                    media_owner_name=(row.get("media_owner_name") or "").strip() or None,
+                    network_name=(row.get("network_name") or "").strip(),
+                    status=InventoryStatus.ACTIVE,
+                )
+
+                # Re-use existing single-create logic so that all validations apply
+                await InventoryService.create_inventory(db=db, current_user=current_user, data=data)
+                created += 1
+            except APIException as e:
+                skipped += 1
+                errors.append({
+                    "row": str(idx),
+                    "message": e.message,
+                })
+            except Exception as e:  # pragma: no cover - unexpected error
+                skipped += 1
+                errors.append({
+                    "row": str(idx),
+                    "message": str(e),
+                })
+
+        return {
+            "created": created,
+            "skipped": skipped,
+            "errors": errors,
+        }
 
 
 inventory_service = InventoryService()

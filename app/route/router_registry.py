@@ -28,6 +28,16 @@ CLIENT_ROUTES = [
         tags=["client-team"]
     ),
     RouteConfig(
+        module_path="app.api.client.v1.campaign",
+        prefix=f"{settings.API_V1_STR}/campaigns",
+        tags=["client-campaign"]
+    ),
+    RouteConfig(
+        module_path="app.api.client.v1.media_plan",
+        prefix=f"{settings.API_V1_STR}/media-plans",
+        tags=["client-media-plan"]
+    ),
+    RouteConfig(
         module_path="app.api.client.v1.inventory",
         prefix=f"{settings.API_V1_STR}/inventory",
         tags=["client-inventory"]

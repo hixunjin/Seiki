@@ -285,3 +285,11 @@ The application has been migrated from MySQL to PostgreSQL with the following ar
 2. Use `TIMESTAMPTZ` type for time fields (PostgreSQL best practice)
 3. Test migrations in development before production deployment
 4. Backup database before running migrations on production
+
+
+
+
+
+
+
+

@@ -57,6 +57,11 @@ CLIENT_ROUTES = [
         prefix=f"{settings.API_V1_STR}/aws",
         tags=["client-aws"]
     ),
+    RouteConfig(
+        module_path="app.api.client.v1.dashboard",
+        prefix=f"{settings.API_V1_STR}/dashboard",
+        tags=["client-dashboard"]
+    ),
 ]
 
 # Backoffice route configuration

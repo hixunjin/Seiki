@@ -10,6 +10,7 @@ from app.models.campaign import Campaign, CampaignInventory
 from app.models.user import User
 from app.schemas.client.campaign import (
     CampaignCreate,
+    CampaignUpdate,
     CampaignResponse,
     CampaignDetailResponse,
     CampaignListFilter,
@@ -159,3 +160,44 @@ async def get_campaign_detail(
         campaign_id=campaign_id,
     )
     return ApiResponse.success(data=result)
+
+
+@router.put("/{campaign_id}", response_model=CampaignResponse)
+async def update_campaign(
+    campaign_id: int,
+    data: CampaignUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update a campaign by id.
+
+    All fields except country_code can be updated.
+    country_code is fixed to 'SA' and cannot be changed.
+    """
+    async with transaction(db):
+        result = await campaign_service.update_campaign(
+            db=db,
+            current_user=current_user,
+            campaign_id=campaign_id,
+            data=data,
+        )
+        return ApiResponse.success(data=result)
+
+
+@router.delete("/{campaign_id}")
+async def delete_campaign(
+    campaign_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Delete a campaign by id.
+
+    Cannot delete if campaign is used by any media plan.
+    """
+    async with transaction(db):
+        await campaign_service.delete_campaign(
+            db=db,
+            current_user=current_user,
+            campaign_id=campaign_id,
+        )
+        return ApiResponse.success(message="Campaign deleted successfully")

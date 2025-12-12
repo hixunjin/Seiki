@@ -48,6 +48,17 @@ class MediaPlanDetailResponse(MediaPlanResponse):
     Campaigns: List[str] = Field(default_factory=list)
 
 
+class MediaPlanUpdate(BaseSchema):
+    """Payload for updating a media plan."""
+
+    name: str = Field(..., max_length=255)
+    budget: Optional[int] = Field(default=None, ge=0)
+    description: Optional[str] = None
+
+    # 计划包含的活动 ID 列表
+    campaign_ids: List[int] = Field(default_factory=list)
+
+
 class MediaPlanListFilter(BaseSchema):
     """Filters for media plan list endpoint with pagination."""
 

@@ -11,6 +11,7 @@ from app.models.campaign import Campaign
 from app.models.user import User
 from app.schemas.client.media_plan import (
     MediaPlanCreate,
+    MediaPlanUpdate,
     MediaPlanResponse,
     MediaPlanListFilter,
     MediaPlanStatus,
@@ -160,3 +161,43 @@ async def get_media_plan_detail(
         media_plan_id=media_plan_id,
     )
     return ApiResponse.success(data=result)
+
+
+@router.put("/{media_plan_id}", response_model=MediaPlanResponse)
+async def update_media_plan(
+    media_plan_id: int,
+    data: MediaPlanUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update a media plan by id.
+
+    All fields can be updated, including the list of campaigns.
+    """
+    async with transaction(db):
+        result = await media_plan_service.update_media_plan(
+            db=db,
+            current_user=current_user,
+            media_plan_id=media_plan_id,
+            data=data,
+        )
+        return ApiResponse.success(data=result)
+
+
+@router.delete("/{media_plan_id}")
+async def delete_media_plan(
+    media_plan_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Delete a media plan by id.
+
+    Campaigns will NOT be deleted, only the association is removed.
+    """
+    async with transaction(db):
+        await media_plan_service.delete_media_plan(
+            db=db,
+            current_user=current_user,
+            media_plan_id=media_plan_id,
+        )
+        return ApiResponse.success(message="Media plan deleted successfully")

@@ -5,14 +5,15 @@ from datetime import date
 from typing import List, Dict
 
 from fastapi import status
-from sqlalchemy import select
+from sqlalchemy import select, func, delete as sql_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exceptions.http_exceptions import APIException
 from app.models.campaign import Campaign, CampaignInventory
+from app.models.media_plan import MediaPlanCampaign
 from app.models.inventory import Inventory
 from app.models.user import User, TeamRole, OrganizationType
-from app.schemas.client.campaign import CampaignCreate, CampaignResponse, CampaignDetailResponse
+from app.schemas.client.campaign import CampaignCreate, CampaignUpdate, CampaignResponse, CampaignDetailResponse
 
 
 class CampaignService:
@@ -215,6 +216,170 @@ class CampaignService:
             billboard_count=billboard_count,
             billboard_ids=billboard_ids,
             kpi_data=kpi_data,
+        )
+
+    @staticmethod
+    async def delete_campaign(
+        db: AsyncSession,
+        current_user: User,
+        campaign_id: int,
+    ) -> None:
+        """Delete a campaign by id.
+
+        - Only owner/admin of media owner organization can delete.
+        - Cannot delete if campaign is used by any media plan.
+        """
+        # Permission checks
+        if current_user.role not in [TeamRole.OWNER.value, TeamRole.ADMIN.value]:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only owner or admin can delete campaign",
+            )
+
+        org_type_normalized = (current_user.organization_type or "").replace("-", " ").lower()
+        media_owner_normalized = OrganizationType.MEDIA_OWNER.value.lower()
+        if org_type_normalized != media_owner_normalized:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only media owners can delete campaign",
+            )
+
+        # Find campaign
+        query = select(Campaign).where(Campaign.id == campaign_id)
+        result = await db.execute(query)
+        campaign = result.scalar_one_or_none()
+        if not campaign:
+            raise APIException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Campaign not found",
+            )
+
+        # Check if campaign is used by any media plan
+        usage_query = select(func.count()).where(
+            MediaPlanCampaign.campaign_id == campaign_id
+        )
+        usage_result = await db.execute(usage_query)
+        usage_count = usage_result.scalar() or 0
+
+        if usage_count > 0:
+            raise APIException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                message=f"Cannot delete: campaign is used by {usage_count} media plan(s)",
+            )
+
+        # Delete campaign (campaign_inventories will cascade)
+        await db.delete(campaign)
+        await db.flush()
+
+    @staticmethod
+    async def update_campaign(
+        db: AsyncSession,
+        current_user: User,
+        campaign_id: int,
+        data: CampaignUpdate,
+    ) -> CampaignResponse:
+        """Update a campaign by id.
+
+        - Only owner/admin of media owner organization can update.
+        - country_code is fixed to 'SA' and cannot be changed.
+        - Billboard associations will be updated (old removed, new added).
+        """
+        # Permission checks
+        if current_user.role not in [TeamRole.OWNER.value, TeamRole.ADMIN.value]:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only owner or admin can update campaign",
+            )
+
+        org_type_normalized = (current_user.organization_type or "").replace("-", " ").lower()
+        media_owner_normalized = OrganizationType.MEDIA_OWNER.value.lower()
+        if org_type_normalized != media_owner_normalized:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only media owners can update campaign",
+            )
+
+        # Find campaign
+        query = select(Campaign).where(Campaign.id == campaign_id)
+        result = await db.execute(query)
+        campaign = result.scalar_one_or_none()
+        if not campaign:
+            raise APIException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Campaign not found",
+            )
+
+        # Validate date range
+        if data.start_date > data.end_date:
+            raise APIException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                message="start_date must be before or equal to end_date",
+            )
+
+        # Deduplicate inventory_ids
+        unique_inventory_ids = list(set(data.inventory_ids))
+
+        # Validate inventory_ids exist
+        if unique_inventory_ids:
+            inv_query = select(func.count()).where(Inventory.id.in_(unique_inventory_ids))
+            inv_result = await db.execute(inv_query)
+            found_count = inv_result.scalar() or 0
+            if found_count != len(unique_inventory_ids):
+                raise APIException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message="Some inventory IDs do not exist",
+                )
+
+        # Update campaign fields (country_code stays as 'SA')
+        campaign.name = data.name
+        campaign.price_eur = data.price_eur
+        campaign.description = data.description
+        campaign.start_date = data.start_date
+        campaign.end_date = data.end_date
+        campaign.city = data.city
+        campaign.gender = data.gender.value
+        campaign.age_ranges = json.dumps(data.age_ranges) if data.age_ranges else None
+        campaign.socio_professional_category = (
+            data.socio_professional_category.value if data.socio_professional_category else None
+        )
+        campaign.mobility_modes = json.dumps(data.mobility_modes) if data.mobility_modes else None
+        campaign.poi_categories = json.dumps(data.poi_categories) if data.poi_categories else None
+
+        # Update billboard associations: delete old, insert new
+        # 1. Delete existing associations using SQL delete
+        delete_stmt = sql_delete(CampaignInventory).where(
+            CampaignInventory.campaign_id == campaign_id
+        )
+        await db.execute(delete_stmt)
+
+        # 2. Insert new associations (using deduplicated list)
+        for inv_id in unique_inventory_ids:
+            assoc = CampaignInventory(campaign_id=campaign_id, inventory_id=inv_id)
+            db.add(assoc)
+
+        await db.flush()
+        await db.refresh(campaign)
+
+        # Count billboards for response
+        billboard_count = len(unique_inventory_ids)
+
+        return CampaignResponse(
+            id=campaign.id,
+            name=campaign.name,
+            price_eur=campaign.price_eur,
+            description=campaign.description,
+            start_date=campaign.start_date,
+            end_date=campaign.end_date,
+            country_code=campaign.country_code,
+            city=campaign.city,
+            gender=campaign.gender,
+            age_ranges=json.loads(campaign.age_ranges) if campaign.age_ranges else None,
+            socio_professional_category=campaign.socio_professional_category,
+            mobility_modes=json.loads(campaign.mobility_modes) if campaign.mobility_modes else None,
+            poi_categories=json.loads(campaign.poi_categories) if campaign.poi_categories else None,
+            billboard_count=billboard_count,
+            created_at=campaign.created_at,
+            updated_at=campaign.updated_at,
         )
 
 

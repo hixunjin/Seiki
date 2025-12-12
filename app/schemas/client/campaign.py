@@ -89,6 +89,38 @@ class CampaignDetailResponse(CampaignResponse):
     kpi_data: dict | None = None
 
 
+class CampaignUpdate(BaseSchema):
+    """Payload for updating a campaign (活动).
+
+    All fields except country_code can be updated.
+    country_code is fixed to 'SA' and cannot be changed.
+    """
+
+    # 基础信息
+    name: str = Field(..., max_length=255)
+    price_eur: int = Field(..., ge=0)
+    description: Optional[str] = None
+
+    # 时间
+    start_date: date
+    end_date: date
+
+    # 地理 (city only, country_code is fixed)
+    city: Optional[str] = Field(None, max_length=100)
+
+    # 人群
+    gender: Gender = Gender.ALL
+    age_ranges: Optional[List[str]] = None
+
+    # 社会职业 & 出行 & 兴趣点
+    socio_professional_category: Optional[SocioProfessionalCategory] = None
+    mobility_modes: Optional[List[str]] = None
+    poi_categories: Optional[List[str]] = None
+
+    # 选择的广告牌 ID 列表
+    inventory_ids: List[int] = Field(default_factory=list)
+
+
 class CampaignListFilter(BaseSchema):
     """Filters for campaign list endpoint with pagination."""
 

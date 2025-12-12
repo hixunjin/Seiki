@@ -4,7 +4,7 @@ from datetime import date
 from typing import List, Optional, Tuple
 
 from fastapi import status
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete as sql_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exceptions.http_exceptions import APIException
@@ -13,6 +13,7 @@ from app.models.campaign import Campaign
 from app.models.user import User, TeamRole, OrganizationType
 from app.schemas.client.media_plan import (
     MediaPlanCreate,
+    MediaPlanUpdate,
     MediaPlanResponse,
     MediaPlanDetailResponse,
     MediaPlanStatus,
@@ -197,6 +198,157 @@ class MediaPlanService:
             operator_first_name=operator_first_name,
             operator_last_name=operator_last_name,
             Campaigns=campaign_names,
+        )
+
+    @staticmethod
+    async def delete_media_plan(
+        db: AsyncSession,
+        current_user: User,
+        media_plan_id: int,
+    ) -> None:
+        """Delete a media plan by id.
+
+        - Only owner/admin of media owner organization can delete.
+        - Media plan campaigns association will be cascade deleted.
+        - Campaigns themselves will NOT be deleted.
+        """
+        # Permission checks
+        if current_user.role not in [TeamRole.OWNER.value, TeamRole.ADMIN.value]:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only owner or admin can delete media plan",
+            )
+
+        org_type_normalized = (current_user.organization_type or "").replace("-", " ").lower()
+        media_owner_normalized = OrganizationType.MEDIA_OWNER.value.lower()
+        if org_type_normalized != media_owner_normalized:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only media owners can delete media plan",
+            )
+
+        # Find media plan
+        query = select(MediaPlan).where(MediaPlan.id == media_plan_id)
+        result = await db.execute(query)
+        media_plan = result.scalar_one_or_none()
+        if not media_plan:
+            raise APIException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Media plan not found",
+            )
+
+        # Delete media plan (media_plan_campaigns will cascade)
+        await db.delete(media_plan)
+        await db.flush()
+
+    @staticmethod
+    async def update_media_plan(
+        db: AsyncSession,
+        current_user: User,
+        media_plan_id: int,
+        data: MediaPlanUpdate,
+    ) -> MediaPlanResponse:
+        """Update a media plan by id.
+
+        - Only owner/admin of media owner organization can update.
+        - Campaign associations will be updated (old removed, new added).
+        """
+        # Permission checks
+        if current_user.role not in [TeamRole.OWNER.value, TeamRole.ADMIN.value]:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only owner or admin can update media plan",
+            )
+
+        org_type_normalized = (current_user.organization_type or "").replace("-", " ").lower()
+        media_owner_normalized = OrganizationType.MEDIA_OWNER.value.lower()
+        if org_type_normalized != media_owner_normalized:
+            raise APIException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Only media owners can update media plan",
+            )
+
+        # Find media plan
+        query = select(MediaPlan).where(MediaPlan.id == media_plan_id)
+        result = await db.execute(query)
+        media_plan = result.scalar_one_or_none()
+        if not media_plan:
+            raise APIException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Media plan not found",
+            )
+
+        # Deduplicate campaign_ids
+        unique_campaign_ids = list(set(data.campaign_ids))
+
+        # Validate campaign_ids exist
+        if unique_campaign_ids:
+            camp_query = select(func.count()).where(Campaign.id.in_(unique_campaign_ids))
+            camp_result = await db.execute(camp_query)
+            found_count = camp_result.scalar() or 0
+            if found_count != len(unique_campaign_ids):
+                raise APIException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message="Some campaign IDs do not exist",
+                )
+
+        # Update media plan fields
+        media_plan.name = data.name
+        media_plan.budget = data.budget
+        media_plan.description = data.description
+
+        # Update campaign associations: delete old, insert new
+        # 1. Delete existing associations using SQL delete
+        delete_stmt = sql_delete(MediaPlanCampaign).where(
+            MediaPlanCampaign.media_plan_id == media_plan_id
+        )
+        await db.execute(delete_stmt)
+
+        # 2. Insert new associations (using deduplicated list)
+        for camp_id in unique_campaign_ids:
+            assoc = MediaPlanCampaign(media_plan_id=media_plan_id, campaign_id=camp_id)
+            db.add(assoc)
+
+        await db.flush()
+        await db.refresh(media_plan)
+
+        # Calculate date range from campaigns
+        start_date = None
+        end_date = None
+        if unique_campaign_ids:
+            date_query = select(
+                func.min(Campaign.start_date).label("start_date"),
+                func.max(Campaign.end_date).label("end_date"),
+            ).where(Campaign.id.in_(unique_campaign_ids))
+            date_result = await db.execute(date_query)
+            date_row = date_result.one()
+            start_date = date_row.start_date
+            end_date = date_row.end_date
+
+        # Get operator info
+        operator_first_name = None
+        operator_last_name = None
+        if media_plan.created_by:
+            user_query = select(User).where(User.id == media_plan.created_by)
+            user_result = await db.execute(user_query)
+            creator = user_result.scalar_one_or_none()
+            if creator:
+                operator_first_name = creator.first_name
+                operator_last_name = creator.last_name
+
+        return MediaPlanResponse(
+            id=media_plan.id,
+            name=media_plan.name,
+            budget=media_plan.budget,
+            description=media_plan.description,
+            start_date=start_date,
+            end_date=end_date,
+            status=MediaPlanService._compute_status(start_date, end_date),
+            campaigns_count=len(unique_campaign_ids),
+            operator_first_name=operator_first_name,
+            operator_last_name=operator_last_name,
+            created_at=media_plan.created_at,
+            updated_at=media_plan.updated_at,
         )
 
 

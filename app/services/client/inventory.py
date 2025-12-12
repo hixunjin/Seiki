@@ -1,9 +1,10 @@
 from typing import List, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from fastapi import status
 from app.models.inventory import Inventory
+from app.models.campaign import CampaignInventory
 from app.models.user import User, TeamRole, OrganizationType
 from app.schemas.client.inventory import (
     InventoryCreate,
@@ -225,6 +226,19 @@ class InventoryService:
             raise APIException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="Inventory not found",
+            )
+
+        # Check if inventory is used by any campaign
+        usage_query = select(func.count()).where(
+            CampaignInventory.inventory_id == inventory.id
+        )
+        usage_result = await db.execute(usage_query)
+        usage_count = usage_result.scalar() or 0
+
+        if usage_count > 0:
+            raise APIException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                message=f"Cannot delete: inventory is used by {usage_count} campaign(s)",
             )
 
         await db.delete(inventory)
